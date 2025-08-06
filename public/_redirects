@@ -1,0 +1,5 @@
+# Redirects para que as páginas do seu site funcionem corretamente
+/admin/* /index.html    200
+/blog/* /index.html    200
+
+# A linha incorreta da API foi removida.

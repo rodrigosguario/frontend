@@ -1,0 +1,10 @@
+# Dependências
+node_modules
+
+# Ficheiros de build
+dist
+.DS_Store
+
+# Ficheiros de ambiente
+.env
+.env.local

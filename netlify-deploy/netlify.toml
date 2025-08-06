@@ -1,0 +1,14 @@
+[build]
+  # Comando correto para construir o seu site Vite/React
+  command = "pnpm run build"
+  # Pasta correta onde o site construído é colocado
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Regra para que o roteamento de páginas funcione corretamente (Single Page App)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
