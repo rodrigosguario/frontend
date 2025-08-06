@@ -821,4 +821,3 @@ const NewThemeForm = ({ onSubmit, loading }) => {
 };
 
 export default AdminSettings;
-
