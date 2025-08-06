@@ -1,461 +1,419 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Save, 
-  Edit3, 
+  RefreshCw, 
   Eye, 
-  RefreshCw,
-  Settings,
+  Plus, 
+  Trash2, 
+  Edit3,
+  CheckCircle,
+  AlertCircle,
+  Loader,
   FileText,
+  Settings,
   Image,
-  Type,
-  Layout,
-  Palette,
-  ArrowLeft
+  Type
 } from 'lucide-react';
-import { contentAPI } from '@/config/api';
 
 const ContentEditorAdvanced = () => {
   const [sections, setSections] = useState([]);
-  const [selectedSection, setSelectedSection] = useState(null);
-  const [editingContent, setEditingContent] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState('list'); // 'list' ou 'edit'
+  const [activeSection, setActiveSection] = useState(null);
+  const [sectionContent, setSectionContent] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    loadSections();
+    loadAllSections();
   }, []);
 
-  const loadSections = async () => {
-    setLoading(true);
+  // Auto-save a cada 5 segundos quando há mudanças
+  useEffect(() => {
+    if (activeSection && sectionContent[activeSection]) {
+      const autoSaveInterval = setInterval(() => {
+        handleAutoSave();
+      }, 5000);
+
+      return () => clearInterval(autoSaveInterval);
+    }
+  }, [activeSection, sectionContent]);
+
+  const loadAllSections = async () => {
     try {
-      const response = await contentAPI.getAllContent();
-      const sectionsData = response.data || [];
-      setSections(sectionsData);
+      setLoading(true);
+      
+      // Tentar carregar todas as seções
+      const response = await fetch('/api/content');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSections(data);
+        
+        // Preparar conteúdo das seções
+        const contentMap = {};
+        data.forEach(section => {
+          contentMap[section.section_id] = section.content_data;
+        });
+        setSectionContent(contentMap);
+        
+        // Selecionar primeira seção
+        if (data.length > 0) {
+          setActiveSection(data[0].section_id);
+        }
+      } else {
+        // Fallback para seções padrão
+        const defaultSections = [
+          { section_id: 'hero', section_name: 'Seção Principal' },
+          { section_id: 'about', section_name: 'Sobre o Médico' },
+          { section_id: 'services', section_name: 'Serviços' },
+          { section_id: 'contact', section_name: 'Contato' }
+        ];
+        setSections(defaultSections);
+        setActiveSection('hero');
+      }
     } catch (error) {
       console.error('Erro ao carregar seções:', error);
-      // Fallback com dados de exemplo
-      setSections([
-        {
-          section_id: 'hero',
-          section_name: 'Seção Principal',
-          content_data: {
-            title: 'Dr. Rodrigo Sguario',
-            subtitle: 'Cardiologista Especialista em Transplante Cardíaco',
-            description: 'Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.',
-            cta_text: 'Agendar Consulta'
-          }
-        },
-        {
-          section_id: 'about',
-          section_name: 'Sobre o Médico',
-          content_data: {
-            title: 'Sobre o Dr. Rodrigo',
-            description: 'Médico cardiologista com ampla experiência em transplante cardíaco.',
-            experience: '15+ anos de experiência',
-            specialties: ['Transplante Cardíaco', 'Insuficiência Cardíaca', 'Cardiologia Preventiva']
-          }
-        },
-        {
-          section_id: 'services',
-          section_name: 'Serviços',
-          content_data: {
-            title: 'Serviços Oferecidos',
-            services: [
-              {
-                name: 'Transplante Cardíaco',
-                description: 'Avaliação e acompanhamento para transplante cardíaco'
-              },
-              {
-                name: 'Insuficiência Cardíaca',
-                description: 'Tratamento especializado para insuficiência cardíaca'
-              }
-            ]
-          }
-        },
-        {
-          section_id: 'contact',
-          section_name: 'Contato',
-          content_data: {
-            title: 'Entre em Contato',
-            phone: '(11) 99999-9999',
-            email: 'contato@drrodrigosguario.com.br',
-            address: 'São Paulo, SP'
-          }
-        }
-      ]);
+      showNotification('Erro ao carregar conteúdo', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const editSection = (section) => {
-    setSelectedSection(section);
-    setEditingContent(section.content_data);
-    setActiveView('edit');
-  };
+  const handleAutoSave = async () => {
+    if (!activeSection || !sectionContent[activeSection]) return;
 
-  const saveSection = async () => {
-    if (!selectedSection) return;
-
-    setLoading(true);
     try {
-      await contentAPI.updateSectionContent(selectedSection.section_id, editingContent);
-      
-      // Atualizar estado local
-      setSections(sections.map(section => 
-        section.section_id === selectedSection.section_id 
-          ? { ...section, content_data: editingContent }
-          : section
-      ));
-      
-      alert('Seção atualizada com sucesso!');
-      setActiveView('list');
+      setSaving(true);
+      const response = await fetch(`/api/content/${activeSection}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content_data: sectionContent[activeSection]
+        })
+      });
+
+      if (response.ok) {
+        setLastSaved(new Date());
+        showNotification('Salvo automaticamente', 'success');
+      } else {
+        // Fallback para localStorage
+        localStorage.setItem(`section_${activeSection}`, JSON.stringify(sectionContent[activeSection]));
+        showNotification('Salvo localmente', 'warning');
+      }
     } catch (error) {
-      console.error('Erro ao salvar seção:', error);
-      alert('Erro ao salvar seção. Verifique sua conexão e tente novamente.');
+      console.error('Erro no auto-save:', error);
+      // Salvar localmente como fallback
+      localStorage.setItem(`section_${activeSection}`, JSON.stringify(sectionContent[activeSection]));
+      showNotification('Salvo localmente', 'warning');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
+  };
+
+  const handleManualSave = async () => {
+    if (!activeSection || !sectionContent[activeSection]) return;
+
+    try {
+      setSaving(true);
+      const response = await fetch(`/api/content/${activeSection}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content_data: sectionContent[activeSection]
+        })
+      });
+
+      if (response.ok) {
+        setLastSaved(new Date());
+        showNotification('Conteúdo salvo com sucesso!', 'success');
+      } else {
+        throw new Error('Falha ao salvar');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      showNotification('Erro ao salvar. Conteúdo salvo localmente.', 'warning');
+      localStorage.setItem(`section_${activeSection}`, JSON.stringify(sectionContent[activeSection]));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const updateField = (field, value) => {
-    setEditingContent(prev => ({
+    setSectionContent(prev => ({
       ...prev,
-      [field]: value
-    }));
-  };
-
-  const updateArrayField = (field, index, value) => {
-    setEditingContent(prev => ({
-      ...prev,
-      [field]: prev[field].map((item, i) => i === index ? value : item)
-    }));
-  };
-
-  const updateObjectField = (field, subField, value) => {
-    setEditingContent(prev => ({
-      ...prev,
-      [field]: {
-        ...prev[field],
-        [subField]: value
+      [activeSection]: {
+        ...prev[activeSection],
+        [field]: value
       }
     }));
   };
 
-  const updateServiceField = (index, field, value) => {
-    setEditingContent(prev => ({
+  const addArrayItem = (field, newItem) => {
+    setSectionContent(prev => ({
       ...prev,
-      services: prev.services.map((service, i) => 
-        i === index ? { ...service, [field]: value } : service
-      )
-    }));
-  };
-
-  const addArrayItem = (field) => {
-    setEditingContent(prev => ({
-      ...prev,
-      [field]: [...(prev[field] || []), '']
-    }));
-  };
-
-  const addService = () => {
-    setEditingContent(prev => ({
-      ...prev,
-      services: [...(prev.services || []), { name: '', description: '' }]
+      [activeSection]: {
+        ...prev[activeSection],
+        [field]: [...(prev[activeSection]?.[field] || []), newItem]
+      }
     }));
   };
 
   const removeArrayItem = (field, index) => {
-    setEditingContent(prev => ({
+    setSectionContent(prev => ({
       ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
+      [activeSection]: {
+        ...prev[activeSection],
+        [field]: prev[activeSection]?.[field]?.filter((_, i) => i !== index) || []
+      }
     }));
   };
 
-  const renderFieldEditor = (key, value) => {
-    // Tratamento especial para services
-    if (key === 'services' && Array.isArray(value)) {
-      return (
-        <div key={key} className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Serviços Oferecidos
-          </label>
-          {value.map((service, index) => (
-            <div key={index} className="mb-4 p-4 border border-gray-200 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-medium text-gray-700">Serviço {index + 1}</h4>
-                <button
-                  onClick={() => removeArrayItem('services', index)}
-                  className="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                >
-                  Remover
-                </button>
-              </div>
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={service.name || ''}
-                  onChange={(e) => updateServiceField(index, 'name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nome do serviço"
-                />
-                <textarea
-                  value={service.description || ''}
-                  onChange={(e) => updateServiceField(index, 'description', e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Descrição do serviço"
-                />
-              </div>
-            </div>
-          ))}
-          <button
-            onClick={addService}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Adicionar Serviço
-          </button>
-        </div>
-      );
-    }
+  const updateArrayItem = (field, index, newValue) => {
+    setSectionContent(prev => {
+      const newArray = [...(prev[activeSection]?.[field] || [])];
+      newArray[index] = newValue;
+      return {
+        ...prev,
+        [activeSection]: {
+          ...prev[activeSection],
+          [field]: newArray
+        }
+      };
+    });
+  };
 
-    // Tratamento para arrays simples (como specialties)
-    if (Array.isArray(value)) {
-      return (
-        <div key={key} className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-            {key.replace('_', ' ')}
-          </label>
-          {value.map((item, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={item}
-                onChange={(e) => updateArrayField(key, index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={`${key} ${index + 1}`}
-              />
-              <button
-                onClick={() => removeArrayItem(key, index)}
-                className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Remover
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={() => addArrayItem(key)}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Adicionar {key}
-          </button>
-        </div>
-      );
-    }
-
-    // Tratamento para objetos complexos
-    if (typeof value === 'object' && value !== null) {
-      return (
-        <div key={key} className="mb-6 p-4 border border-gray-200 rounded-lg">
-          <h4 className="font-medium text-gray-700 mb-3 capitalize">
-            {key.replace('_', ' ')}
-          </h4>
-          {Object.entries(value).map(([subKey, subValue]) => (
-            <div key={subKey} className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-                {subKey.replace('_', ' ')}
-              </label>
-              <input
-                type="text"
-                value={subValue}
-                onChange={(e) => updateObjectField(key, subKey, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={`Digite o ${subKey}`}
-              />
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    // Tratamento para strings
-    const isLongText = typeof value === 'string' && value.length > 100;
-
-    return (
-      <div key={key} className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-          {key.replace('_', ' ')}
-        </label>
-        {isLongText ? (
+  const renderFieldEditor = (field, value, type = 'text') => {
+    switch (type) {
+      case 'textarea':
+        return (
           <textarea
-            value={value}
-            onChange={(e) => updateField(key, e.target.value)}
+            value={value || ''}
+            onChange={(e) => updateField(field, e.target.value)}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder={`Digite o ${key}`}
+            placeholder={`Digite ${field}`}
           />
-        ) : (
+        );
+      
+      case 'array':
+        return (
+          <div className="space-y-3">
+            {(value || []).map((item, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={item || ''}
+                  onChange={(e) => updateArrayItem(field, index, e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={`Item ${index + 1}`}
+                />
+                <button
+                  onClick={() => removeArrayItem(field, index)}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => addArrayItem(field, '')}
+              className="flex items-center px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Adicionar Item
+            </button>
+          </div>
+        );
+      
+      default:
+        return (
           <input
-            type="text"
-            value={value}
-            onChange={(e) => updateField(key, e.target.value)}
+            type={type}
+            value={value || ''}
+            onChange={(e) => updateField(field, e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder={`Digite o ${key}`}
+            placeholder={`Digite ${field}`}
           />
-        )}
+        );
+    }
+  };
+
+  const renderSectionEditor = () => {
+    if (!activeSection || !sectionContent[activeSection]) {
+      return (
+        <div className="text-center py-8">
+          <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">Selecione uma seção para editar</p>
+        </div>
+      );
+    }
+
+    const content = sectionContent[activeSection];
+    const sectionName = sections.find(s => s.section_id === activeSection)?.section_name || activeSection;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+            <Edit3 className="h-5 w-5 mr-2 text-blue-600" />
+            Editando: {sectionName}
+          </h3>
+          
+          <div className="flex items-center space-x-2">
+            {saving && (
+              <div className="flex items-center text-sm text-gray-500">
+                <Loader className="h-4 w-4 animate-spin mr-1" />
+                Salvando...
+              </div>
+            )}
+            {lastSaved && (
+              <span className="text-sm text-gray-500">
+                Salvo às {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(content).map(([field, value]) => (
+            <div key={field} className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 capitalize">
+                <Type className="h-4 w-4 inline mr-1" />
+                {field.replace(/_/g, ' ')}
+              </label>
+              
+              {Array.isArray(value) ? (
+                renderFieldEditor(field, value, 'array')
+              ) : typeof value === 'string' && value.length > 100 ? (
+                renderFieldEditor(field, value, 'textarea')
+              ) : (
+                renderFieldEditor(field, value, 'text')
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Preview */}
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Eye className="h-5 w-5 mr-2" />
+            Preview dos Dados
+          </h4>
+          <pre className="text-sm text-gray-600 overflow-auto max-h-40">
+            {JSON.stringify(content, null, 2)}
+          </pre>
+        </div>
       </div>
     );
   };
 
-  if (activeView === 'edit' && selectedSection) {
+  if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setActiveView('list')}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </button>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Editando: {selectedSection.section_name}
-            </h2>
-          </div>
-          <button
-            onClick={saveSection}
-            disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-          >
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {loading ? 'Salvando...' : 'Salvar Alterações'}
-          </button>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Edit3 className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-800">
-                Conteúdo da Seção
-              </h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Edite o conteúdo desta seção. As alterações serão aplicadas automaticamente ao site.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {Object.entries(editingContent).map(([key, value]) => 
-              renderFieldEditor(key, value)
-            )}
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader className="h-8 w-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-600">Carregando editor...</span>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Layout className="w-8 h-8 text-blue-600" />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Editor de Conteúdo Avançado</h2>
-            <p className="text-gray-600">Gerencie o conteúdo das seções do seu site como no WordPress</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Editor de Conteúdo</h1>
+          <p className="text-gray-600">Edite o conteúdo das seções do seu site</p>
         </div>
-        <button
-          onClick={loadSections}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-        >
-          {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Atualizar
-        </button>
+        
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={loadAllSections}
+            className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Recarregar
+          </button>
+          
+          <button
+            onClick={handleManualSave}
+            disabled={saving || !activeSection}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+          >
+            {saving ? (
+              <Loader className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-2 text-gray-600">Carregando seções...</span>
+      {/* Notification */}
+      {notification && (
+        <div className={`mb-4 p-4 rounded-md flex items-center ${
+          notification.type === 'success' ? 'bg-green-50 text-green-800' :
+          notification.type === 'error' ? 'bg-red-50 text-red-800' :
+          'bg-yellow-50 text-yellow-800'
+        }`}>
+          {notification.type === 'success' ? (
+            <CheckCircle className="h-5 w-5 mr-2" />
+          ) : (
+            <AlertCircle className="h-5 w-5 mr-2" />
+          )}
+          {notification.message}
         </div>
-      ) : (
-        <div className="grid gap-6">
-          {sections.map((section) => (
-            <div key={section.section_id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    {section.section_id === 'hero' && <Type className="w-5 h-5 text-blue-600" />}
-                    {section.section_id === 'about' && <FileText className="w-5 h-5 text-blue-600" />}
-                    {section.section_id === 'services' && <Settings className="w-5 h-5 text-blue-600" />}
-                    {section.section_id === 'contact' && <Image className="w-5 h-5 text-blue-600" />}
-                    {!['hero', 'about', 'services', 'contact'].includes(section.section_id) && <Layout className="w-5 h-5 text-blue-600" />}
-                  </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar - Seções */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Settings className="h-5 w-5 mr-2" />
+              Seções Disponíveis
+            </h2>
+            <nav className="space-y-2">
+              {sections.map((section) => (
+                <button
+                  key={section.section_id}
+                  onClick={() => setActiveSection(section.section_id)}
+                  className={`w-full flex items-center px-3 py-2 text-left rounded-md transition-colors ${
+                    activeSection === section.section_id
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <FileText className="h-4 w-4 mr-3" />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {section.section_name}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      ID: {section.section_id}
-                    </p>
+                    <div className="font-medium">{section.section_name}</div>
+                    <div className="text-xs text-gray-500">{section.section_id}</div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => editSection(section)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    Editar
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-700 mb-2">Prévia do Conteúdo:</h4>
-                <div className="text-sm text-gray-600 space-y-1">
-                  {Object.entries(section.content_data).slice(0, 3).map(([key, value]) => (
-                    <div key={key}>
-                      <span className="font-medium capitalize">{key.replace('_', ' ')}:</span>{' '}
-                      <span className="text-gray-500">
-                        {Array.isArray(value) 
-                          ? `${value.length} itens`
-                          : typeof value === 'object'
-                          ? 'Objeto complexo'
-                          : String(value).substring(0, 50) + (String(value).length > 50 ? '...' : '')
-                        }
-                      </span>
-                    </div>
-                  ))}
-                  {Object.keys(section.content_data).length > 3 && (
-                    <div className="text-gray-400">
-                      +{Object.keys(section.content_data).length - 3} campos adicionais
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
-      )}
 
-      {sections.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <Layout className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-500 mb-2">
-            Nenhuma seção encontrada
-          </h3>
-          <p className="text-gray-400">
-            As seções do site serão carregadas automaticamente quando disponíveis.
-          </p>
+        {/* Main Content - Editor */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            {renderSectionEditor()}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
 export default ContentEditorAdvanced;
-
