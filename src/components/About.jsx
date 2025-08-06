@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Users, BookOpen, GraduationCap, Award, Stethoscope } from 'lucide-react';
+import { siteContentAPI } from '../config/api';
 
 const About = () => {
   const [aboutData, setAboutData] = useState({
@@ -60,22 +61,18 @@ const About = () => {
 
   const loadAboutContent = async () => {
     try {
-      // Tentar carregar do backend primeiro
-      const response = await fetch('/api/content/about');
+      setLoading(true);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.content_data) {
-          setAboutData(data.content_data);
-        }
+      // Tentar carregar conteúdo específico da seção about
+      const response = await siteContentAPI.getSectionContent('about');
+      
+      if (response.data && response.data.data) {
+        setAboutData(response.data.data);
       } else {
-        // Se falhar, tentar API alternativa
-        const altResponse = await fetch('/api/site/content');
-        if (altResponse.ok) {
-          const altData = await altResponse.json();
-          if (altData.about) {
-            setAboutData(altData.about);
-          }
+        // Se não encontrar seção específica, tentar carregar todo o conteúdo
+        const allContentResponse = await siteContentAPI.getAllContent();
+        if (allContentResponse.data && allContentResponse.data.data && allContentResponse.data.data.about) {
+          setAboutData(allContentResponse.data.data.about);
         }
       }
     } catch (error) {

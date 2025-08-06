@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Loader
 } from 'lucide-react';
+import { siteContentAPI } from '../../config/api';
 
 const WordPressCMS = () => {
   const [siteContent, setSiteContent] = useState({});
@@ -37,11 +38,10 @@ const WordPressCMS = () => {
   const loadSiteContent = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/site/content');
+      const response = await siteContentAPI.getAllContent();
       
-      if (response.ok) {
-        const data = await response.json();
-        setSiteContent(data);
+      if (response.data && response.data.data) {
+        setSiteContent(response.data.data);
       } else {
         // Fallback para dados locais se API falhar
         const fallbackData = {
@@ -82,15 +82,9 @@ const WordPressCMS = () => {
   const handleAutoSave = async () => {
     try {
       setSaving(true);
-      const response = await fetch('/api/site/content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(siteContent)
-      });
+      const response = await siteContentAPI.saveAllContent(siteContent);
 
-      if (response.ok) {
+      if (response.data && response.data.success) {
         setLastSaved(new Date());
         showNotification('Salvo automaticamente', 'success');
       }
@@ -107,15 +101,9 @@ const WordPressCMS = () => {
   const handleManualSave = async () => {
     try {
       setSaving(true);
-      const response = await fetch('/api/site/content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(siteContent)
-      });
+      const response = await siteContentAPI.saveAllContent(siteContent);
 
-      if (response.ok) {
+      if (response.data && response.data.success) {
         setLastSaved(new Date());
         showNotification('Conteúdo salvo com sucesso!', 'success');
       } else {

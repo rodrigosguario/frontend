@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Award, Users, Star, Phone, Calendar } from 'lucide-react';
+import { siteContentAPI } from '../config/api';
 
 const Hero = () => {
   const [heroData, setHeroData] = useState({
@@ -41,22 +42,18 @@ const Hero = () => {
 
   const loadHeroContent = async () => {
     try {
-      // Tentar carregar do backend primeiro
-      const response = await fetch('/api/content/hero');
+      setLoading(true);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.content_data) {
-          setHeroData(data.content_data);
-        }
+      // Tentar carregar conteúdo específico da seção hero
+      const response = await siteContentAPI.getSectionContent('hero');
+      
+      if (response.data && response.data.data) {
+        setHeroData(response.data.data);
       } else {
-        // Se falhar, tentar API alternativa
-        const altResponse = await fetch('/api/site/content');
-        if (altResponse.ok) {
-          const altData = await altResponse.json();
-          if (altData.hero) {
-            setHeroData(altData.hero);
-          }
+        // Se não encontrar seção específica, tentar carregar todo o conteúdo
+        const allContentResponse = await siteContentAPI.getAllContent();
+        if (allContentResponse.data && allContentResponse.data.data && allContentResponse.data.data.hero) {
+          setHeroData(allContentResponse.data.data.hero);
         }
       }
     } catch (error) {

@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Activity, Shield, Stethoscope, Clock, Users, CheckCircle } from 'lucide-react';
+import { settingsAPI } from '../config/api';
 
 const Services = () => {
   const [whatsappConfig, setWhatsappConfig] = useState(null);
 
   useEffect(() => {
     // Carregar configuração do WhatsApp
-    fetch('/api/settings/whatsapp')
-      .then(res => res.json())
-      .then(data => setWhatsappConfig(data))
-      .catch(err => console.log('Usando configuração padrão do WhatsApp'));
+    loadWhatsAppConfig();
   }, []);
+
+  const loadWhatsAppConfig = async () => {
+    try {
+      const response = await settingsAPI.getSetting('whatsapp');
+      if (response.data && response.data.data) {
+        setWhatsappConfig(response.data.data);
+      }
+    } catch (error) {
+      console.log('Usando configuração padrão do WhatsApp');
+      // Configuração padrão
+      setWhatsappConfig({
+        phone: '5511933821515',
+        messages: {
+          transplant: 'Olá! Gostaria de agendar uma consulta sobre Transplante Cardíaco com Dr. Rodrigo Sguario.',
+          heart_failure: 'Olá! Gostaria de agendar uma consulta sobre Insuficiência Cardíaca com Dr. Rodrigo Sguario.',
+          preventive: 'Olá! Gostaria de agendar uma consulta de Cardiologia Preventiva com Dr. Rodrigo Sguario.',
+          echo: 'Olá! Gostaria de agendar um Ecocardiograma com Dr. Rodrigo Sguario.'
+        }
+      });
+    }
+  };
 
   const handleWhatsAppClick = (serviceType) => {
     if (!whatsappConfig) {
@@ -30,26 +49,11 @@ const Services = () => {
     }
 
     // Usar configuração do banco de dados
-    fetch('/api/whatsapp-url', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ service_type: serviceType })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.url) {
-        window.open(data.url, '_blank');
-      }
-    })
-    .catch(err => {
-      console.error('Erro ao gerar URL do WhatsApp:', err);
-      // Fallback
-      const phone = '5511933821515';
-      const message = encodeURIComponent('Olá! Gostaria de agendar uma consulta com Dr. Rodrigo Sguario.');
-      window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-    });
+    const phone = whatsappConfig.phone || '5511933821515';
+    const messages = whatsappConfig.messages || {};
+    const message = encodeURIComponent(messages[serviceType] || 'Olá! Gostaria de agendar uma consulta com Dr. Rodrigo Sguario.');
+    const url = `https://wa.me/${phone}?text=${message}`;
+    window.open(url, '_blank');
   };
 
   const services = [

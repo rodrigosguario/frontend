@@ -16,6 +16,7 @@ import ContentEditorAdvanced from './ContentEditorAdvanced';
 import AdminSettingsAdvanced from './AdminSettingsAdvanced';
 import ReviewsManager from './ReviewsManager';
 import WordPressCMS from './WordPressCMS';
+import { blogAPI, reviewsAPI } from '../../config/api';
 
 const AdminDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard');
@@ -34,15 +35,15 @@ const AdminDashboard = () => {
     try {
       // Carregar estatísticas reais do backend
       const [postsRes, reviewsRes] = await Promise.all([
-        fetch('/api/blog/posts').catch(() => ({ json: () => [] })),
-        fetch('/api/reviews').catch(() => ({ json: () => [] }))
+        blogAPI.getPosts(),
+        reviewsAPI.getReviews()
       ]);
 
-      const posts = await postsRes.json();
-      const reviews = await reviewsRes.json();
+      const posts = postsRes.data?.data || [];
+      const reviews = reviewsRes.data?.data || [];
 
       const avgRating = reviews.length > 0 
-        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+        ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
         : 0;
 
       setStats({
