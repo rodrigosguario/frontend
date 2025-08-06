@@ -1,76 +1,65 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  Calendar,
-  Send,
-  CheckCircle,
-  MessageSquare
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import { Phone, Mail, MapPin, Clock, MessageSquare, Send, CheckCircle } from 'lucide-react';
 
 const Contact = () => {
+  const [contactData, setContactData] = useState({
+    title: "Entre em Contato",
+    description: "Agende sua consulta e cuide da sua saúde cardíaca com quem entende do assunto.",
+    phone: "(11) 99999-9999",
+    email: "contato@drrodrigosguario.com.br",
+    address: "São Paulo, SP",
+    hours: "Segunda a Sexta: 8h às 18h\nSábado: 8h às 12h",
+    emergency: "Atendimento de emergência 24h",
+    form_fields: [
+      { name: "name", label: "Nome Completo", type: "text", required: true },
+      { name: "email", label: "E-mail", type: "email", required: true },
+      { name: "phone", label: "Telefone", type: "tel", required: true },
+      { name: "message", label: "Mensagem", type: "textarea", required: true }
+    ]
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    service: '',
     message: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const contactInfo = [
-    {
-      icon: MapPin,
-      title: "Endereço",
-      details: [
-        "Av. Paulista, 1048, 18º andar",
-        "Bela Vista, São Paulo - SP",
-        "CEP: 01310-100"
-      ]
-    },
-    {
-      icon: Phone,
-      title: "Telefone",
-      details: [
-        "(11) 3382-1515",
-        "WhatsApp: (11) 99999-9999"
-      ]
-    },
-    {
-      icon: Mail,
-      title: "E-mail",
-      details: [
-        "rodrigomrsguario.cardiologia@gmail.com"
-      ]
-    },
-    {
-      icon: Clock,
-      title: "Horário de Atendimento",
-      details: [
-        "Segunda a Sexta: 8h às 18h",
-        "Sábado: 8h às 12h",
-        "Emergências: 24h"
-      ]
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    loadContactContent();
+  }, []);
+
+  const loadContactContent = async () => {
+    try {
+      // Tentar carregar do backend primeiro
+      const response = await fetch('/api/content/contact');
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.content_data) {
+          setContactData(data.content_data);
+        }
+      } else {
+        // Se falhar, tentar API alternativa
+        const altResponse = await fetch('/api/site/content');
+        if (altResponse.ok) {
+          const altData = await altResponse.json();
+          if (altData.contact) {
+            setContactData(altData.contact);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conteúdo do Contact:', error);
+      // Manter dados padrão se houver erro
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const services = [
-    "Consulta Cardiológica",
-    "Transplante Cardíaco",
-    "Insuficiência Cardíaca",
-    "Ecocardiografia",
-    "Segunda Opinião",
-    "Outro"
-  ];
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -82,269 +71,242 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setSubmitting(true);
 
     try {
       // Simular envio do formulário
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Aqui você integraria com sua API/backend
+      // Em produção, aqui seria feita a chamada real para a API
       console.log('Dados do formulário:', formData);
       
-      toast.success('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+      setSubmitted(true);
+      setFormData({ name: '', email: '', phone: '', message: '' });
       
-      // Limpar formulário
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        service: '',
-        message: ''
-      });
+      // Reset após 5 segundos
+      setTimeout(() => setSubmitted(false), 5000);
+      
     } catch (error) {
-      toast.error('Erro ao enviar mensagem. Tente novamente.');
+      console.error('Erro ao enviar formulário:', error);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const openWhatsApp = () => {
-    const message = encodeURIComponent(
-      `Olá Dr. Rodrigo! Gostaria de agendar uma consulta. Meu nome é ${formData.name || '[Nome]'}.`
-    );
-    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
+  const formatWhatsAppLink = (phone, message = '') => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const defaultMessage = encodeURIComponent(message || 'Olá! Gostaria de agendar uma consulta.');
+    return `https://wa.me/55${cleanPhone}?text=${defaultMessage}`;
   };
 
+  if (loading) {
+    return (
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 rounded mb-4 mx-auto max-w-md"></div>
+            <div className="h-4 bg-gray-300 rounded mb-8 mx-auto max-w-2xl"></div>
+            <div className="grid lg:grid-cols-2 gap-12">
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 bg-gray-300 rounded"></div>
+              </div>
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 bg-gray-300 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="contact" className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header da seção */}
-        <motion.div 
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-            Entre em Contato
+    <section id="contact" className="py-20 bg-white">
+      <div className="container mx-auto px-6">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            {contactData.title}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Agende sua consulta ou tire suas dúvidas. Estamos aqui para cuidar da sua saúde cardíaca
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            {contactData.description}
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Formulário de contato */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Card className="card-shadow border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <Calendar className="w-6 h-6 text-primary" />
-                  Agendar Consulta
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome completo *</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Seu nome completo"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-mail *</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="seu@email.com"
-                        required
-                      />
-                    </div>
+        <div className="grid lg:grid-cols-2 gap-16">
+          {/* Contact Information */}
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-8">Informações de Contato</h3>
+            
+            <div className="space-y-6">
+              {/* Phone */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Phone className="h-6 w-6 text-blue-600" />
                   </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Telefone</h4>
+                  <p className="text-gray-600 mb-2">{contactData.phone}</p>
+                  <a
+                    href={formatWhatsAppLink(contactData.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-green-600 hover:text-green-700 font-medium"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" />
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone *</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="(11) 99999-9999"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="service">Tipo de consulta</Label>
-                      <select
-                        id="service"
-                        name="service"
-                        value={formData.service}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <option value="">Selecione um serviço</option>
-                        {services.map((service) => (
-                          <option key={service} value={service}>
-                            {service}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              {/* Email */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Mail className="h-6 w-6 text-blue-600" />
                   </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">E-mail</h4>
+                  <a
+                    href={`mailto:${contactData.email}`}
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    {contactData.email}
+                  </a>
+                </div>
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Mensagem</Label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      placeholder="Descreva brevemente o motivo da consulta ou suas dúvidas..."
-                      rows={4}
-                    />
+              {/* Address */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <MapPin className="h-6 w-6 text-blue-600" />
                   </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Localização</h4>
+                  <p className="text-gray-600">{contactData.address}</p>
+                </div>
+              </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="flex-1 medical-gradient text-white"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          Enviar Mensagem
-                        </>
-                      )}
-                    </Button>
+              {/* Hours */}
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Horários</h4>
+                  <div className="text-gray-600">
+                    {contactData.hours.split('\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                  {contactData.emergency && (
+                    <p className="text-red-600 font-medium mt-2">{contactData.emergency}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+              <h4 className="text-lg font-semibold text-red-800 mb-2">Emergência Cardíaca</h4>
+              <p className="text-red-700 mb-4">
+                Em caso de emergência cardíaca, procure imediatamente o pronto-socorro mais próximo ou ligue para o SAMU.
+              </p>
+              <div className="flex space-x-4">
+                <a
+                  href="tel:192"
+                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  SAMU 192
+                </a>
+                <a
+                  href={`tel:${contactData.phone.replace(/\D/g, '')}`}
+                  className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Dr. Rodrigo
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-8">Envie uma Mensagem</h3>
+            
+            {submitted ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+                <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                <h4 className="text-xl font-semibold text-green-800 mb-2">Mensagem Enviada!</h4>
+                <p className="text-green-700">
+                  Obrigado pelo contato. Retornaremos em breve.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {contactData.form_fields.map((field) => (
+                  <div key={field.name}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {field.label}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
                     
-                    <Button 
-                      type="button"
-                      onClick={openWhatsApp}
-                      variant="outline"
-                      className="flex-1 border-green-500 text-green-600 hover:bg-green-500 hover:text-white"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      WhatsApp
-                    </Button>
+                    {field.type === 'textarea' ? (
+                      <textarea
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleInputChange}
+                        required={field.required}
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                        placeholder={`Digite ${field.label.toLowerCase()}`}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleInputChange}
+                        required={field.required}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                        placeholder={`Digite ${field.label.toLowerCase()}`}
+                      />
+                    )}
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
+                ))}
 
-          {/* Informações de contato */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            {contactInfo.map((info, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="card-shadow hover-lift border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <info.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-2">
-                          {info.title}
-                        </h3>
-                        <div className="space-y-1">
-                          {info.details.map((detail, idx) => (
-                            <p key={idx} className="text-muted-foreground text-sm">
-                              {detail}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-
-            {/* Mapa */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              <Card className="card-shadow border-0 overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="aspect-video bg-muted relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <div className="text-center">
-                        <MapPin className="w-12 h-12 text-primary mx-auto mb-2" />
-                        <p className="text-foreground font-medium">
-                          Av. Paulista, 1048
-                        </p>
-                        <p className="text-muted-foreground text-sm">
-                          Bela Vista, São Paulo
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Informações importantes */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Card className="border-l-4 border-l-primary bg-primary/5">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="font-semibold text-foreground mb-2">
-                        Atendimento Personalizado
-                      </h4>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        Cada consulta é planejada com tempo adequado para uma avaliação completa. 
-                        Priorizamos a qualidade do atendimento sobre a quantidade de consultas.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar Mensagem
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </section>
@@ -352,4 +314,3 @@ const Contact = () => {
 };
 
 export default Contact;
-
