@@ -480,47 +480,6 @@ export const siteContentAPI = {
   }
 };
 
-// --- SETTINGS API COM FALLBACKS ---
-export const settingsAPI = {
-  getAllSettings: async () => {
-    try {
-      const response = await api.get('/settings');
-      return response;
-    } catch (error) {
-      console.warn('API getAllSettings falhou, usando fallback');
-      
-      const settings = JSON.parse(localStorage.getItem('fallback_settings') || '{}');
-      return createFallbackResponse(settings);
-    }
-  },
-  
-  getSetting: async (settingKey) => {
-    try {
-      const response = await api.get(`/settings/${settingKey}`);
-      return response;
-    } catch (error) {
-      console.warn('API getSetting falhou, usando fallback');
-      
-      const settings = JSON.parse(localStorage.getItem('fallback_settings') || '{}');
-      return createFallbackResponse(settings[settingKey]);
-    }
-  },
-  
-  updateSetting: async (settingKey, value) => {
-    try {
-      const response = await api.put(`/settings/${settingKey}`, { value });
-      return response;
-    } catch (error) {
-      console.warn('API updateSetting falhou, usando fallback');
-      
-      const settings = JSON.parse(localStorage.getItem('fallback_settings') || '{}');
-      settings[settingKey] = value;
-      localStorage.setItem('fallback_settings', JSON.stringify(settings));
-      return createFallbackResponse(value);
-    }
-  }
-};
-
 // --- SITE API COM FALLBACKS ---
 export const siteAPI = {
   getAllSections: async () => {
