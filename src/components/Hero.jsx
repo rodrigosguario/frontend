@@ -1,34 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, Award, Users, Clock, Calendar, ArrowRight, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { siteAPI } from '@/config/api';
 
 const Hero = () => {
-  const achievements = [
-    {
-      icon: Heart,
-      title: "Referência em Transplante",
-      description: "Liderança e experiência em transplantes cardíacos"
-    },
-    {
-      icon: Award,
-      title: "Tecnologia Avançada", 
-      description: "Equipamentos de última geração para diagnósticos precisos"
-    },
-    {
-      icon: Users,
-      title: "Atendimento Humanizado",
-      description: "Cuidado focado no paciente, com empatia e atenção"
-    }
-  ];
+  const [heroData, setHeroData] = useState({
+    title: "Dr. Rodrigo Sguario",
+    subtitle: "Cardiologista Especialista em Transplante Cardíaco",
+    description: "Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.",
+    cta_text: "Agendar Consulta",
+    cta_link: "#contact",
+    achievements: [
+      {
+        icon: "Heart",
+        title: "Referência em Transplante",
+        description: "Liderança e experiência em transplantes cardíacos"
+      },
+      {
+        icon: "Award",
+        title: "Tecnologia Avançada", 
+        description: "Equipamentos de última geração para diagnósticos precisos"
+      },
+      {
+        icon: "Users",
+        title: "Atendimento Humanizado",
+        description: "Cuidado focado no paciente, com empatia e atenção"
+      }
+    ],
+    stats: [
+      { number: "500+", label: "Pacientes Atendidos" },
+      { number: "15+", label: "Anos de Experiência" },
+      { number: "5.0", label: "Avaliação Média", icon: "Star" },
+      { number: "24h", label: "Suporte Emergencial" }
+    ]
+  });
 
-  const stats = [
-    { number: "500+", label: "Pacientes Atendidos" },
-    { number: "15+", label: "Anos de Experiência" },
-    { number: "5.0", label: "Avaliação Média", icon: Star },
-    { number: "24h", label: "Suporte Emergencial" }
-  ];
+  // Carregar dados da seção Hero da API
+  useEffect(() => {
+    loadHeroData();
+  }, []);
+
+  const loadHeroData = async () => {
+    try {
+      const sections = await siteAPI.getAllSections();
+      const heroSection = sections.find(section => section.section_id === 'hero');
+      if (heroSection && heroSection.content_data) {
+        setHeroData(heroSection.content_data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do Hero:', error);
+      // Mantém dados padrão em caso de erro
+    }
+  };
+
+  const getIconComponent = (iconName) => {
+    const icons = { Heart, Award, Users, Star };
+    return icons[iconName] || Heart;
+  };
 
   const scrollToSection = (href) => {
     const element = document.querySelector(href);
@@ -63,7 +93,7 @@ const Hero = () => {
                 className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium"
               >
                 <Heart className="w-4 h-4" fill="currentColor" />
-                Especialista em Transplante Cardíaco
+                {heroData.subtitle}
               </motion.div>
 
               <motion.h1 
@@ -72,7 +102,7 @@ const Hero = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
-                Dr. Rodrigo Sguario
+                {heroData.title}
                 <span className="block text-3xl lg:text-4xl text-primary mt-2">
                   Cardiologista em São Paulo
                 </span>
@@ -84,9 +114,7 @@ const Hero = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                Especialista em <strong>Transplante Cardíaco</strong> e <strong>Insuficiência Cardíaca Avançada</strong>. 
-                Formado pelo Instituto do Coração (InCor – HCFMUSP). Acredito em um cuidado próximo e humano. 
-                Estarei à disposição para guiá-lo nessa jornada com responsabilidade e dedicação.
+                {heroData.description}
               </motion.p>
             </div>
 
@@ -99,11 +127,11 @@ const Hero = () => {
             >
               <Button 
                 size="lg"
-                onClick={() => scrollToSection('#contact')}
+                onClick={() => scrollToSection(heroData.cta_link || '#contact')}
                 className="medical-gradient text-white hover:opacity-90 transition-all duration-300 ease-in-out group"
               >
                 <Calendar className="w-5 h-5 mr-2" />
-                Agendar Consulta
+                {heroData.cta_text}
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-all duration-300 ease-in-out" />
               </Button>
               
@@ -124,15 +152,18 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-2xl lg:text-3xl font-bold text-primary">
-                    {stat.number}
-                    {stat.icon && <stat.icon className="w-6 h-6" fill="currentColor" />}
+              {heroData.stats && heroData.stats.map((stat, index) => {
+                const IconComponent = stat.icon ? getIconComponent(stat.icon) : null;
+                return (
+                  <div key={index} className="text-center">
+                    <div className="flex items-center justify-center gap-1 text-2xl lg:text-3xl font-bold text-primary">
+                      {stat.number}
+                      {IconComponent && <IconComponent className="w-6 h-6" fill="currentColor" />}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-                </div>
-              ))}
+                );
+              })}
             </motion.div>
           </motion.div>
 
@@ -143,18 +174,20 @@ const Hero = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            {achievements.map((achievement, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
-              >
+            {heroData.achievements && heroData.achievements.map((achievement, index) => {
+              const IconComponent = getIconComponent(achievement.icon);
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
+                >
                 <Card className="card-shadow hover-lift border-0 bg-card/80 backdrop-blur-sm">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <achievement.icon className="w-6 h-6 text-primary" />
+                        <IconComponent className="w-6 h-6 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">
@@ -168,7 +201,8 @@ const Hero = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+              );
+            })}
 
             {/* Badge de avaliação */}
             <motion.div
