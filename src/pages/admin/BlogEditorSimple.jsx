@@ -312,4 +312,3 @@ const BlogEditorSimple = () => {
 };
 
 export default BlogEditorSimple;
-
