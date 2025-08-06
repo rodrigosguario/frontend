@@ -24,11 +24,14 @@ import {
   Eye,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Star
 } from 'lucide-react';
-import AdminSettings from './AdminSettings';
-import ContentEditor from './ContentEditor';
+import AdminSettingsAdvanced from './AdminSettingsAdvanced';
+import ContentEditorAdvanced from './ContentEditorAdvanced';
 import BlogEditorSimple from './BlogEditorSimple';
+import ReviewsManager from './ReviewsManager';
+import VisualEditor from './VisualEditor';
 import { blogAPI, adminAPI } from '@/config/api';
 
 const AdminDashboard = () => {
@@ -128,8 +131,10 @@ const AdminDashboard = () => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart },
     { id: 'settings', label: 'Configurações', icon: Settings },
-    { id: 'content', label: 'Editor de Conteúdo', icon: Edit },
+    { id: 'visual-editor', label: 'Editor Visual', icon: Edit },
+    { id: 'content', label: 'Editor de Conteúdo', icon: FileText },
     { id: 'blog', label: 'Blog', icon: FileText },
+    { id: 'reviews', label: 'Avaliações', icon: Star },
     { id: 'contacts', label: 'Contatos', icon: MessageSquare }
   ];
 
@@ -327,11 +332,15 @@ const AdminDashboard = () => {
           </>
         )}
 
-        {activeView === 'settings' && <AdminSettings />}
+        {activeView === 'settings' && <AdminSettingsAdvanced />}
 
-        {activeView === 'content' && <ContentEditor />}
+        {activeView === 'visual-editor' && <VisualEditor />}
+
+        {activeView === 'content' && <ContentEditorAdvanced />}
 
         {activeView === 'blog' && <BlogEditorSimple />}
+
+        {activeView === 'reviews' && <ReviewsManager />}
 
         {activeView === 'contacts' && (
           <div>
@@ -349,4 +358,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
