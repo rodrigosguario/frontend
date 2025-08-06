@@ -31,6 +31,7 @@ import AdminSettingsAdvanced from './AdminSettingsAdvanced';
 import ContentEditorAdvanced from './ContentEditorAdvanced';
 import BlogEditorSimple from './BlogEditorSimple';
 import ReviewsManager from './ReviewsManager';
+import WordPressCMS from './WordPressCMS';
 import VisualEditor from './VisualEditor';
 import { blogAPI, adminAPI } from '@/config/api';
 
@@ -135,7 +136,8 @@ const AdminDashboard = () => {
     { id: 'content', label: 'Editor de Conteúdo', icon: FileText },
     { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'reviews', label: 'Avaliações', icon: Star },
-    { id: 'contacts', label: 'Contatos', icon: MessageSquare }
+    { id: 'contacts', label: 'Contatos', icon: MessageSquare },
+    { id: 'wordpress', label: 'WordPress CMS', icon: Edit },
   ];
 
   if (loading) {
@@ -341,6 +343,8 @@ const AdminDashboard = () => {
         {activeView === 'blog' && <BlogEditorSimple />}
 
         {activeView === 'reviews' && <ReviewsManager />}
+
+        {activeView === 'wordpress' && <WordPressCMS />}
 
         {activeView === 'contacts' && (
           <div>
