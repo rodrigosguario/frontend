@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Award, Users, Clock, Calendar, ArrowRight, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { siteAPI } from '@/config/api';
+import { Heart, Award, Users, Star, Phone, Calendar } from 'lucide-react';
 
 const Hero = () => {
   const [heroData, setHeroData] = useState({
@@ -19,13 +15,13 @@ const Hero = () => {
         description: "Liderança e experiência em transplantes cardíacos"
       },
       {
-        icon: "Award",
-        title: "Tecnologia Avançada", 
+        icon: "Award", 
+        title: "Tecnologia Avançada",
         description: "Equipamentos de última geração para diagnósticos precisos"
       },
       {
         icon: "Users",
-        title: "Atendimento Humanizado",
+        title: "Atendimento Humanizado", 
         description: "Cuidado focado no paciente, com empatia e atenção"
       }
     ],
@@ -37,209 +33,158 @@ const Hero = () => {
     ]
   });
 
-  // Carregar dados da seção Hero da API
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    loadHeroData();
+    loadHeroContent();
   }, []);
 
-  const loadHeroData = async () => {
+  const loadHeroContent = async () => {
     try {
-      const sections = await siteAPI.getAllSections();
-      const heroSection = sections.find(section => section.section_id === 'hero');
-      if (heroSection && heroSection.content_data) {
-        setHeroData(heroSection.content_data);
+      // Tentar carregar do backend primeiro
+      const response = await fetch('/api/content/hero');
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.content_data) {
+          setHeroData(data.content_data);
+        }
+      } else {
+        // Se falhar, tentar API alternativa
+        const altResponse = await fetch('/api/site/content');
+        if (altResponse.ok) {
+          const altData = await altResponse.json();
+          if (altData.hero) {
+            setHeroData(altData.hero);
+          }
+        }
       }
     } catch (error) {
-      console.error('Erro ao carregar dados do Hero:', error);
-      // Mantém dados padrão em caso de erro
+      console.error('Erro ao carregar conteúdo do Hero:', error);
+      // Manter dados padrão se houver erro
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getIconComponent = (iconName) => {
-    const icons = { Heart, Award, Users, Star };
+  const getIcon = (iconName) => {
+    const icons = {
+      Heart: Heart,
+      Award: Award,
+      Users: Users,
+      Star: Star,
+      Phone: Phone,
+      Calendar: Calendar
+    };
     return icons[iconName] || Heart;
   };
 
-  const scrollToSection = (href) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  return (
-    <section id="home" className="relative min-h-screen flex items-center hero-gradient overflow-hidden">
-      {/* Background decorativo */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-primary rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-accent rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-primary/30 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Conteúdo principal */}
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="space-y-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium"
-              >
-                <Heart className="w-4 h-4" fill="currentColor" />
-                {heroData.subtitle}
-              </motion.div>
-
-              <motion.h1 
-                className="text-4xl lg:text-6xl font-bold text-foreground leading-tight"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                {heroData.title}
-                <span className="block text-3xl lg:text-4xl text-primary mt-2">
-                  Cardiologista em São Paulo
-                </span>
-              </motion.h1>
-
-              <motion.p 
-                className="text-xl text-muted-foreground leading-relaxed max-w-2xl"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                {heroData.description}
-              </motion.p>
-            </div>
-
-            {/* Botões de ação */}
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              <Button 
-                size="lg"
-                onClick={() => scrollToSection(heroData.cta_link || '#contact')}
-                className="medical-gradient text-white hover:opacity-90 transition-all duration-300 ease-in-out group"
-              >
-                <Calendar className="w-5 h-5 mr-2" />
-                {heroData.cta_text}
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-all duration-300 ease-in-out" />
-              </Button>
-              
-              <Button 
-                size="lg"
-                variant="outline"
-                onClick={() => scrollToSection('#services')}
-                className="border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 ease-in-out"
-              >
-                Nossos Serviços
-              </Button>
-            </motion.div>
-
-            {/* Estatísticas */}
-            <motion.div 
-              className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              {heroData.stats && heroData.stats.map((stat, index) => {
-                const IconComponent = stat.icon ? getIconComponent(stat.icon) : null;
-                return (
-                  <div key={index} className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-2xl lg:text-3xl font-bold text-primary">
-                      {stat.number}
-                      {IconComponent && <IconComponent className="w-6 h-6" fill="currentColor" />}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-                  </div>
-                );
-              })}
-            </motion.div>
-          </motion.div>
-
-          {/* Cards de destaque */}
-          <motion.div 
-            className="space-y-6"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-          >
-            {heroData.achievements && heroData.achievements.map((achievement, index) => {
-              const IconComponent = getIconComponent(achievement.icon);
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
-                >
-                <Card className="card-shadow hover-lift border-0 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <IconComponent className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-2">
-                          {achievement.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          {achievement.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              );
-            })}
-
-            {/* Badge de avaliação */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 text-center"
-            >
-              <div className="flex items-center justify-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-yellow-500" fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-sm font-medium text-gray-800">
-                5/5 em mais de 60 avaliações de pacientes
-              </p>
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Indicador de scroll */}
-      <motion.div 
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1 }}
-      >
-        <div className="animate-bounce">
-          <div className="w-6 h-10 border-2 border-primary rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-primary rounded-full mt-2 animate-pulse-medical"></div>
+  if (loading) {
+    return (
+      <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white py-20">
+        <div className="container mx-auto px-6 text-center">
+          <div className="animate-pulse">
+            <div className="h-12 bg-blue-700 rounded mb-4 mx-auto max-w-md"></div>
+            <div className="h-6 bg-blue-700 rounded mb-6 mx-auto max-w-lg"></div>
+            <div className="h-4 bg-blue-700 rounded mb-8 mx-auto max-w-2xl"></div>
           </div>
         </div>
-      </motion.div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="home" className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white py-20 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-20 h-20 border border-white rounded-full"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 border border-white rounded-full"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 border border-white rounded-full"></div>
+        <div className="absolute bottom-32 right-1/3 w-8 h-8 border border-white rounded-full"></div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Content */}
+          <div className="text-center lg:text-left">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              {heroData.title}
+            </h1>
+            
+            <h2 className="text-xl md:text-2xl text-blue-200 mb-6 font-light">
+              {heroData.subtitle}
+            </h2>
+            
+            <p className="text-lg text-blue-100 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              {heroData.description}
+            </p>
+
+            {/* CTA Button */}
+            <div className="mb-12">
+              <a
+                href={heroData.cta_link || "#contact"}
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-900 font-semibold rounded-full hover:from-yellow-300 hover:to-yellow-400 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                <Calendar className="mr-2 h-5 w-5" />
+                {heroData.cta_text}
+              </a>
+            </div>
+
+            {/* Stats */}
+            {heroData.stats && heroData.stats.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {heroData.stats.map((stat, index) => {
+                  const IconComponent = stat.icon ? getIcon(stat.icon) : null;
+                  return (
+                    <div key={index} className="text-center">
+                      <div className="flex items-center justify-center mb-2">
+                        {IconComponent && <IconComponent className="h-5 w-5 text-yellow-400 mr-1" />}
+                        <span className="text-2xl md:text-3xl font-bold text-yellow-400">
+                          {stat.number}
+                        </span>
+                      </div>
+                      <p className="text-sm text-blue-200">{stat.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Achievements */}
+          <div className="space-y-6">
+            {heroData.achievements && heroData.achievements.map((achievement, index) => {
+              const IconComponent = getIcon(achievement.icon);
+              return (
+                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-yellow-400 rounded-lg flex items-center justify-center">
+                        <IconComponent className="h-6 w-6 text-blue-900" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">{achievement.title}</h3>
+                      <p className="text-blue-100 text-sm leading-relaxed">
+                        {achievement.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Wave */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-16 fill-white">
+          <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"></path>
+        </svg>
+      </div>
     </section>
   );
 };
 
 export default Hero;
-
