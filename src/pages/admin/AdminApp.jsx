@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from '../../components/AdminDashboard';
+import VisualEditor from './VisualEditor';
+import WordPressCMS from './WordPressCMS';
+import Settings from './Settings';
+import BlogManager from './BlogManager';
+import ReviewsManager from './ReviewsManager';
 import { adminAPI } from '../../config/api';
 
 const AdminApp = () => {
@@ -52,7 +58,18 @@ const AdminApp = () => {
     return <AdminLogin onLogin={handleLogin} />;
   }
 
-  return <AdminDashboard admin={admin} onLogout={handleLogout} />;
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/dashboard" element={<AdminDashboard admin={admin} onLogout={handleLogout} />} />
+      <Route path="/editor" element={<VisualEditor />} />
+      <Route path="/cms" element={<WordPressCMS />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/blog" element={<BlogManager />} />
+      <Route path="/reviews" element={<ReviewsManager />} />
+      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+    </Routes>
+  );
 };
 
 export default AdminApp;
