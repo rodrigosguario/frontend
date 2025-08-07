@@ -20,9 +20,9 @@ export const adminAPI = {
       if (authData) {
         const parsed = JSON.parse(authData);
         if (parsed && parsed.authenticated === true && parsed.expiresAt > Date.now()) {
-          return {
+        return {
             success: true,
-            data: {
+          data: {
               authenticated: true,
               admin: parsed.user,
               user: parsed.user
@@ -126,85 +126,85 @@ export const siteContentAPI = {
       } else {
         // Conteúdo padrão se não houver dados salvos
         const defaultContent = {
-          hero: {
-            title: "Dr. Rodrigo Sguario",
-            subtitle: "Cardiologista Especialista em Transplante Cardíaco",
-            description: "Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.",
-            cta_text: "Agendar Consulta",
-            cta_link: "#contact",
-            achievements: [
-              {
-                icon: "Heart",
-                title: "Referência em Transplante",
-                description: "Liderança e experiência em transplantes cardíacos"
-              },
-              {
-                icon: "Award", 
-                title: "Tecnologia Avançada",
-                description: "Equipamentos de última geração para diagnósticos precisos"
-              },
-              {
-                icon: "Users",
-                title: "Atendimento Humanizado", 
-                description: "Cuidado focado no paciente, com empatia e atenção"
-              }
-            ],
-            stats: [
-              { number: "500+", label: "Pacientes Atendidos" },
-              { number: "15+", label: "Anos de Experiência" },
-              { number: "5.0", label: "Avaliação Média" },
-              { number: "24h", label: "Suporte Emergencial" }
-            ]
-          },
-          about: {
-            title: "Sobre o Dr. Rodrigo",
-            description: "Médico cardiologista com ampla experiência em transplante cardíaco e cuidado humanizado.",
-            education: [
-              {
-                institution: "Instituto do Coração (InCor) - USP-SP",
-                degree: "Especialização em Insuficiência Cardíaca e Transplante",
-                period: "2023-2024",
-                description: "Centro de referência em cardiologia da América Latina"
-              },
-              {
-                institution: "UNICAMP",
-                degree: "Residência em Cardiologia",
-                period: "2021-2023",
-                description: "Formação especializada em cardiologia clínica e intervencionista"
-              },
-              {
-                institution: "Universidade Federal de Pelotas (UFPel)",
-                degree: "Graduação em Medicina",
-                period: "2015-2020",
-                description: "Formação médica com foco humanizado"
-              }
-            ],
-            specialties: [
-              "Transplante Cardíaco",
-              "Insuficiência Cardíaca Avançada",
-              "Cardiologia Preventiva",
-              "Ecocardiografia",
-              "Cateterismo Cardíaco",
-              "Reabilitação Cardíaca"
-            ],
-            values: [
-              {
-                icon: "Heart",
-                title: "Formação de Excelência",
-                description: "InCor-USP, UNICAMP e UFPel. Formação acadêmica completa."
-              },
-              {
-                icon: "Users",
-                title: "Foco no Paciente",
-                description: "Cuidado centrado nas necessidades individuais de cada paciente."
-              },
-              {
-                icon: "BookOpen",
-                title: "Atualização Constante",
-                description: "Sempre em busca das mais recentes inovações em cardiologia."
-              }
-            ]
-          },
+        hero: {
+          title: "Dr. Rodrigo Sguario",
+          subtitle: "Cardiologista Especialista em Transplante Cardíaco",
+          description: "Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.",
+          cta_text: "Agendar Consulta",
+          cta_link: "#contact",
+          achievements: [
+            {
+              icon: "Heart",
+              title: "Referência em Transplante",
+              description: "Liderança e experiência em transplantes cardíacos"
+            },
+            {
+              icon: "Award", 
+              title: "Tecnologia Avançada",
+              description: "Equipamentos de última geração para diagnósticos precisos"
+            },
+            {
+              icon: "Users",
+              title: "Atendimento Humanizado", 
+              description: "Cuidado focado no paciente, com empatia e atenção"
+            }
+          ],
+          stats: [
+            { number: "500+", label: "Pacientes Atendidos" },
+            { number: "15+", label: "Anos de Experiência" },
+            { number: "5.0", label: "Avaliação Média" },
+            { number: "24h", label: "Suporte Emergencial" }
+          ]
+        },
+        about: {
+          title: "Sobre o Dr. Rodrigo",
+          description: "Médico cardiologista com ampla experiência em transplante cardíaco e cuidado humanizado.",
+          education: [
+            {
+              institution: "Instituto do Coração (InCor) - USP-SP",
+              degree: "Especialização em Insuficiência Cardíaca e Transplante",
+              period: "2023-2024",
+              description: "Centro de referência em cardiologia da América Latina"
+            },
+            {
+              institution: "UNICAMP",
+              degree: "Residência em Cardiologia",
+              period: "2021-2023",
+              description: "Formação especializada em cardiologia clínica e intervencionista"
+            },
+            {
+              institution: "Universidade Federal de Pelotas (UFPel)",
+              degree: "Graduação em Medicina",
+              period: "2015-2020",
+              description: "Formação médica com foco humanizado"
+            }
+          ],
+          specialties: [
+            "Transplante Cardíaco",
+            "Insuficiência Cardíaca Avançada",
+            "Cardiologia Preventiva",
+            "Ecocardiografia",
+            "Cateterismo Cardíaco",
+            "Reabilitação Cardíaca"
+          ],
+          values: [
+            {
+              icon: "Heart",
+              title: "Formação de Excelência",
+              description: "InCor-USP, UNICAMP e UFPel. Formação acadêmica completa."
+            },
+            {
+              icon: "Users",
+              title: "Foco no Paciente",
+              description: "Cuidado centrado nas necessidades individuais de cada paciente."
+            },
+            {
+              icon: "BookOpen",
+              title: "Atualização Constante",
+              description: "Sempre em busca das mais recentes inovações em cardiologia."
+            }
+          ]
+        },
           services: {
             title: "Nossos Serviços",
             subtitle: "Cuidado cardiológico completo e especializado",
@@ -235,8 +235,8 @@ export const siteContentAPI = {
               }
             ]
           },
-          contact: {
-            title: "Entre em Contato",
+        contact: {
+          title: "Entre em Contato",
             subtitle: "Agende sua consulta ou tire suas dúvidas",
             phone: "(11) 99999-9999",
             email: "contato@drrodrigo.com.br",
@@ -517,7 +517,7 @@ export const reviewsAPI = {
       const content = await siteContentAPI.getAllContent();
       if (content.success && content.data.reviews) {
         const newReview = {
-          id: Date.now(),
+        id: Date.now(),
           ...review,
           date: new Date().toISOString().split('T')[0]
         };

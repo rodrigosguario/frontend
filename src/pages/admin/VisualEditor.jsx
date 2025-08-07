@@ -11,8 +11,8 @@ import {
   Save, 
   Eye, 
   Edit3, 
-  Plus, 
-  Trash2, 
+  Plus,
+  Trash2,
   Copy, 
   CheckCircle, 
   AlertCircle,
@@ -58,15 +58,15 @@ const VisualEditor = () => {
         } else {
           console.warn('Erro ao carregar conteúdo, usando dados padrão');
           setContent(response.data || {});
-        }
-      } catch (error) {
+      }
+    } catch (error) {
         console.error('Erro ao carregar conteúdo:', error);
         setContent({});
-      } finally {
-        setLoading(false);
-      }
-    };
-    
+    } finally {
+      setLoading(false);
+    }
+  };
+
     loadSiteContent();
   }, []);
 
@@ -266,8 +266,8 @@ const PreviewMode = ({ content }) => {
     };
     return icons[iconName] || Heart;
   };
-
-  return (
+    
+    return (
     <div className="bg-white rounded-lg shadow-lg p-8">
       <div className="max-w-4xl mx-auto">
         {/* Hero Section Preview */}
@@ -427,13 +427,13 @@ const EditMode = ({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Seção Principal (Hero)</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+          <Button
+            variant="ghost"
+            size="sm"
                     onClick={() => toggleSection('hero')}
-                  >
+          >
                     {expandedSections.has('hero') ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </Button>
+          </Button>
                 </CardTitle>
               </CardHeader>
               {expandedSections.has('hero') && (
@@ -456,17 +456,17 @@ const EditMode = ({
                       onChange={(e) => updateContent('hero', 'subtitle', e.target.value)}
                       placeholder="Digite o subtítulo"
                     />
-                  </div>
-                  
+        </div>
+        
                   <div>
                     <Label htmlFor="hero-description">Descrição</Label>
-                    <Textarea
+              <Textarea
                       id="hero-description"
                       value={content.hero.description}
                       onChange={(e) => updateContent('hero', 'description', e.target.value)}
                       placeholder="Digite a descrição"
-                      rows={3}
-                    />
+                rows={3}
+              />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -481,7 +481,7 @@ const EditMode = ({
                     </div>
                     <div>
                       <Label htmlFor="hero-cta-link">Link do Botão</Label>
-                      <Input
+              <Input
                         id="hero-cta-link"
                         value={content.hero.cta_link}
                         onChange={(e) => updateContent('hero', 'cta_link', e.target.value)}
@@ -529,13 +529,13 @@ const EditMode = ({
                           />
                         </div>
                       </div>
-                      <Button
+              <Button
                         variant="ghost"
-                        size="sm"
+                size="sm"
                         onClick={() => removeArrayItem('hero', 'stats', index)}
-                      >
+              >
                         <Trash2 size={16} />
-                      </Button>
+              </Button>
                     </div>
                   ))}
                 </div>
@@ -547,9 +547,9 @@ const EditMode = ({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Conquistas</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
+              <Button
+                variant="outline"
+                size="sm"
                     onClick={() => addArrayItem('hero', 'achievements', { 
                       icon: "Heart", 
                       title: "Nova Conquista", 
@@ -598,9 +598,9 @@ const EditMode = ({
                           onClick={() => removeArrayItem('hero', 'achievements', index)}
                         >
                           <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </div>
+              </Button>
+            </div>
+          </div>
                   ))}
                 </div>
               </CardContent>
@@ -643,7 +643,7 @@ const EditMode = ({
                       placeholder="Descrição sobre o médico"
                       rows={3}
                     />
-                  </div>
+          </div>
                 </CardContent>
               )}
             </Card>
@@ -653,9 +653,9 @@ const EditMode = ({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Formação Acadêmica</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
+          <Button
+            variant="outline"
+            size="sm"
                     onClick={() => addArrayItem('about', 'education', {
                       institution: "Nova Instituição",
                       degree: "Novo Curso",
@@ -664,7 +664,7 @@ const EditMode = ({
                     })}
                   >
                     <Plus size={16} />
-                  </Button>
+          </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -705,18 +705,18 @@ const EditMode = ({
                           placeholder="Descrição da formação"
                           rows={2}
                         />
-                      </div>
+        </div>
                       <div className="flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
+              <Button
+                variant="ghost"
+                size="sm"
                           onClick={() => removeArrayItem('about', 'education', index)}
-                        >
+              >
                           <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+              </Button>
+            </div>
+              </div>
+            ))}
                 </div>
               </CardContent>
             </Card>
@@ -751,9 +751,9 @@ const EditMode = ({
                       >
                         <Trash2 size={16} />
                       </Button>
-                    </div>
-                  ))}
-                </div>
+          </div>
+        ))}
+      </div>
               </CardContent>
             </Card>
 
@@ -776,7 +776,7 @@ const EditMode = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+          <div className="space-y-4">
                   {content.about.values.map((value, index) => (
                     <div key={index} className="p-4 border rounded-lg space-y-4">
                       <div className="grid grid-cols-3 gap-4">
@@ -787,7 +787,7 @@ const EditMode = ({
                             onChange={(e) => updateArrayItem('about', 'values', index, 'icon', e.target.value)}
                             placeholder="Ex: Heart"
                           />
-                        </div>
+          </div>
                         <div className="col-span-2">
                           <Label>Título</Label>
                           <Input
@@ -795,8 +795,8 @@ const EditMode = ({
                             onChange={(e) => updateArrayItem('about', 'values', index, 'title', e.target.value)}
                             placeholder="Título do valor"
                           />
-                        </div>
-                      </div>
+          </div>
+          </div>
                       <div>
                         <Label>Descrição</Label>
                         <Textarea
@@ -805,7 +805,7 @@ const EditMode = ({
                           placeholder="Descrição do valor"
                           rows={2}
                         />
-                      </div>
+          </div>
                       <div className="flex justify-end">
                         <Button
                           variant="ghost"
@@ -814,10 +814,10 @@ const EditMode = ({
                         >
                           <Trash2 size={16} />
                         </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              </div>
+          </div>
+                    ))}
+                  </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -847,7 +847,7 @@ const EditMode = ({
                       onChange={(e) => updateContent('services', 'title', e.target.value)}
                       placeholder="Ex: Nossos Serviços"
                     />
-                  </div>
+      </div>
                   
                   <div>
                     <Label htmlFor="services-subtitle">Subtítulo</Label>
@@ -857,7 +857,7 @@ const EditMode = ({
                       onChange={(e) => updateContent('services', 'subtitle', e.target.value)}
                       placeholder="Ex: Cuidado cardiológico completo"
                     />
-                  </div>
+        </div>
                 </CardContent>
               )}
             </Card>
@@ -893,7 +893,7 @@ const EditMode = ({
                             onChange={(e) => updateArrayItem('services', 'services', index, 'icon', e.target.value)}
                             placeholder="Ex: Heart"
                           />
-                        </div>
+          </div>
                         <div className="col-span-2">
                           <Label>Título do Serviço</Label>
                           <Input
@@ -901,9 +901,9 @@ const EditMode = ({
                             onChange={(e) => updateArrayItem('services', 'services', index, 'title', e.target.value)}
                             placeholder="Nome do serviço"
                           />
-                        </div>
-                      </div>
-                      
+        </div>
+      </div>
+
                       <div>
                         <Label>Descrição</Label>
                         <Textarea
@@ -912,8 +912,8 @@ const EditMode = ({
                           placeholder="Descrição detalhada do serviço"
                           rows={3}
                         />
-                      </div>
-                      
+          </div>
+          
                       <div>
                         <Label>Características</Label>
                         <div className="space-y-2">
@@ -928,40 +928,40 @@ const EditMode = ({
                                 }}
                                 placeholder="Característica do serviço"
                               />
-                              <Button
+              <Button
                                 variant="ghost"
-                                size="sm"
+                size="sm"
                                 onClick={() => {
                                   const newFeatures = service.features.filter((_, i) => i !== fIndex);
                                   updateArrayItem('services', 'services', index, 'features', newFeatures);
                                 }}
-                              >
+              >
                                 <Trash2 size={16} />
-                              </Button>
+              </Button>
                             </div>
                           ))}
-                          <Button
+              <Button
                             variant="outline"
-                            size="sm"
+                size="sm"
                             onClick={() => {
                               const newFeatures = [...service.features, "Nova característica"];
                               updateArrayItem('services', 'services', index, 'features', newFeatures);
                             }}
-                          >
+              >
                             <Plus size={16} /> Adicionar Característica
-                          </Button>
+              </Button>
                         </div>
                       </div>
                       
                       <div className="flex justify-end">
-                        <Button
+              <Button
                           variant="ghost"
-                          size="sm"
+                size="sm"
                           onClick={() => removeArrayItem('services', 'services', index)}
-                        >
+              >
                           <Trash2 size={16} />
-                        </Button>
-                      </div>
+              </Button>
+            </div>
                     </div>
                   ))}
                 </div>
@@ -975,13 +975,13 @@ const EditMode = ({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Informações de Contato</span>
-                  <Button
+            <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleSection('contact')}
-                  >
+            >
                     {expandedSections.has('contact') ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </Button>
+            </Button>
                 </CardTitle>
               </CardHeader>
               {expandedSections.has('contact') && (
@@ -1014,9 +1014,9 @@ const EditMode = ({
                         onChange={(e) => updateContent('contact', 'email', e.target.value)}
                         placeholder="Ex: contato@drrodrigosguario.com.br"
                       />
-                    </div>
-                  </div>
-                  
+          </div>
+        </div>
+
                   <div>
                     <Label htmlFor="contact-address">Endereço</Label>
                     <Input
@@ -1082,7 +1082,7 @@ const EditMode = ({
                       Escuro
                     </Button>
                   </div>
-                </div>
+            </div>
 
                 <Separator />
 
@@ -1109,8 +1109,8 @@ const EditMode = ({
                             <span className="font-medium text-sm">{palette.name}</span>
                             {currentPalette === key && (
                               <CheckCircle className="w-4 h-4 text-primary" />
-                            )}
-                          </div>
+          )}
+        </div>
                           
                           <div className="flex gap-2">
                             <div 
