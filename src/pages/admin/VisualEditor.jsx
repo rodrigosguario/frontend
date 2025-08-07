@@ -32,10 +32,32 @@ import {
   Moon
 } from 'lucide-react';
 import { siteContentAPI } from '../../config/api';
-import { useTheme } from '../../components/ThemeProvider';
-
+// Remover dependência do ThemeProvider temporariamente
 const VisualEditor = () => {
-  const { currentPalette, changePalette, getCurrentPalette, getAllPalettes, isDark = false, toggleTheme } = useTheme();
+  // Valores padrão para evitar erros
+  const currentPalette = 'default';
+  const isDark = false;
+  const changePalette = () => {};
+  const getCurrentPalette = () => ({
+    primary: '#475569',
+    secondary: '#334155',
+    accent: '#64748B',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444'
+  });
+  const getAllPalettes = () => ({
+    default: {
+      name: 'Azul Chumbo Moderno',
+      primary: '#475569',
+      secondary: '#334155',
+      accent: '#64748B',
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444'
+    }
+  });
+  const toggleTheme = () => {};
   const [content, setContent] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
