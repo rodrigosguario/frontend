@@ -1,5 +1,5 @@
-// Configuração da API
-const API_BASE_URL = 'https://dr-rodrigo-backend-o.onrender.com';
+// Configuração da API - Força rebuild para corrigir URL
+const API_BASE_URL = 'https://dr-rodrigo-backend.onrender.com';
 
 // Instância principal da API
 const api = {
@@ -408,7 +408,16 @@ export const siteContentAPI = {
   getAllContent: async () => {
     try {
       const response = await api.get('/api/site/content');
-      return response;
+      console.log('API getAllContent resposta:', response);
+      
+      // A API retorna os dados diretamente, não dentro de um objeto 'data'
+      if (response && response.data) {
+        return { data: response.data };
+      } else if (response) {
+        return { data: response };
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
     } catch (error) {
       console.warn('API getAllContent falhou, usando fallback');
       
