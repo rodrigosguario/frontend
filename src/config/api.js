@@ -74,17 +74,37 @@ export const adminAPI = {
   checkAuth: async () => {
     try {
       const response = await api.get('/api/admin/check-auth');
-      return response;
+      console.log('Resposta da API checkAuth:', response);
+      
+      // Garantir que a resposta tenha a estrutura correta
+      if (response && typeof response === 'object') {
+        return {
+          success: true,
+          data: response.data || response,
+          message: 'Autenticação verificada com sucesso'
+        };
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
     } catch (error) {
-      console.warn('API checkAuth falhou, usando fallback');
+      console.warn('API checkAuth falhou, usando fallback:', error);
       
       // Verificar se há dados salvos localmente
       const savedAuth = localStorage.getItem('admin_auth');
       if (savedAuth) {
-        return createFallbackResponse(JSON.parse(savedAuth));
+        try {
+          const parsedAuth = JSON.parse(savedAuth);
+          return createFallbackResponse(parsedAuth);
+        } catch (parseError) {
+          console.warn('Erro ao parsear auth salvo:', parseError);
+        }
       }
       
-      return createFallbackResponse({ authenticated: false });
+      // Retornar estrutura padrão
+      return createFallbackResponse({ 
+        authenticated: false, 
+        admin: null 
+      });
     }
   },
 

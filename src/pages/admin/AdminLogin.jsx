@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { login } from '../../config/auth';
 
 const AdminLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -17,47 +18,19 @@ const AdminLogin = ({ onLogin }) => {
     setError('');
 
     try {
-      // Credenciais hardcoded para funcionar sempre
-      const validCredentials = {
-        username: 'admin@example.com',
-        password: 'admin123'
-      };
-
-      // Simula delay de rede
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Verifica credenciais localmente primeiro
-      if (username === validCredentials.username && password === validCredentials.password) {
-        // Simula token de autenticação
-        const mockToken = 'mock-auth-token-' + Date.now();
-        localStorage.setItem('authToken', mockToken);
-        
-        // Simula dados do usuário
-        const mockUser = {
-          id: 1,
-          username: username,
-          name: 'Dr. Rodrigo Sguario',
-          role: 'admin'
-        };
-
+      const response = login({ username, password });
+      
+      if (response.success) {
         if (onLogin) {
-          onLogin(mockUser);
+          onLogin(response.data.user);
         }
-        
-        // Redireciona para o dashboard
         navigate('/admin/dashboard');
       } else {
-        setError('Credenciais inválidas. Use admin@example.com / admin123');
+        setError(response.message || 'Credenciais inválidas');
       }
     } catch (err) {
       console.error('Erro no login:', err);
-      setError('Erro de conexão. Tentando login offline...');
-      
-      // Fallback: permite login mesmo com erro de rede
-      if (username === 'admin@example.com' && password === 'admin123') {
-        localStorage.setItem('authToken', 'offline-token');
-        navigate('/admin/dashboard');
-      }
+      setError('Erro interno. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -137,7 +110,7 @@ const AdminLogin = ({ onLogin }) => {
         
         <div className="p-4 mt-4 text-sm text-center text-yellow-800 bg-yellow-100 rounded-lg dark:bg-yellow-900 dark:text-yellow-300">
           <p className="font-bold">Credenciais padrão:</p>
-          <p>Usuário: admin@example.com</p>
+          <p>Usuário: admin</p>
           <p>Senha: admin123</p>
           <p className="mt-2">⚠️ Altere a senha após o primeiro login</p>
         </div>

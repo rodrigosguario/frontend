@@ -71,50 +71,75 @@ const colorPalettes = {
 export const ThemeProvider = ({ children }) => {
   const [currentPalette, setCurrentPalette] = useState('default');
   const [isDark, setIsDark] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Carregar preferências salvas
   useEffect(() => {
-    const savedPalette = localStorage.getItem('site-color-palette');
-    const savedTheme = localStorage.getItem('site-theme');
-    
-    if (savedPalette && colorPalettes[savedPalette]) {
-      setCurrentPalette(savedPalette);
-    }
-    
-    if (savedTheme) {
-      setIsDark(savedTheme === 'dark');
+    try {
+      const savedPalette = localStorage.getItem('site-color-palette');
+      const savedTheme = localStorage.getItem('site-theme');
+      
+      if (savedPalette && colorPalettes[savedPalette]) {
+        setCurrentPalette(savedPalette);
+      }
+      
+      if (savedTheme) {
+        setIsDark(savedTheme === 'dark');
+      } else {
+        // Definir valor padrão se não houver preferência salva
+        setIsDark(false);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar preferências de tema:', error);
+      // Garantir valores padrão em caso de erro
+      setCurrentPalette('default');
+      setIsDark(false);
+    } finally {
+      setIsInitialized(true);
     }
   }, []);
 
   // Aplicar cores ao CSS
   useEffect(() => {
-    const palette = colorPalettes[currentPalette];
-    const root = document.documentElement;
+    if (!isInitialized) return;
     
-    // Aplicar variáveis CSS
-    root.style.setProperty('--color-primary', palette.primary);
-    root.style.setProperty('--color-secondary', palette.secondary);
-    root.style.setProperty('--color-accent', palette.accent);
-    root.style.setProperty('--color-success', palette.success);
-    root.style.setProperty('--color-warning', palette.warning);
-    root.style.setProperty('--color-error', palette.error);
-    
-    // Salvar preferência
-    localStorage.setItem('site-color-palette', currentPalette);
-  }, [currentPalette]);
+    try {
+      const palette = colorPalettes[currentPalette];
+      const root = document.documentElement;
+      
+      // Aplicar variáveis CSS
+      root.style.setProperty('--color-primary', palette.primary);
+      root.style.setProperty('--color-secondary', palette.secondary);
+      root.style.setProperty('--color-accent', palette.accent);
+      root.style.setProperty('--color-success', palette.success);
+      root.style.setProperty('--color-warning', palette.warning);
+      root.style.setProperty('--color-error', palette.error);
+      
+      // Salvar preferência
+      localStorage.setItem('site-color-palette', currentPalette);
+    } catch (error) {
+      console.warn('Erro ao aplicar paleta de cores:', error);
+    }
+  }, [currentPalette, isInitialized]);
 
   // Aplicar tema escuro/claro
   useEffect(() => {
-    const root = document.documentElement;
+    if (!isInitialized) return;
     
-    if (isDark) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    try {
+      const root = document.documentElement;
+      
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      
+      localStorage.setItem('site-theme', isDark ? 'dark' : 'light');
+    } catch (error) {
+      console.warn('Erro ao aplicar tema:', error);
     }
-    
-    localStorage.setItem('site-theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
+  }, [isDark, isInitialized]);
 
   const changePalette = (paletteName) => {
     if (colorPalettes[paletteName]) {
@@ -123,7 +148,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    setIsDark(prev => !prev);
   };
 
   const getCurrentPalette = () => colorPalettes[currentPalette];
@@ -135,9 +160,22 @@ export const ThemeProvider = ({ children }) => {
     changePalette,
     getCurrentPalette,
     getAllPalettes,
-    isDark,
-    toggleTheme
+    isDark: isDark || false, // Garantir que nunca seja undefined
+    toggleTheme,
+    isInitialized
   };
+
+  // Não renderizar até que as preferências sejam carregadas
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando tema...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ThemeContext.Provider value={value}>
