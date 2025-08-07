@@ -86,7 +86,7 @@ const VisualEditor = () => {
       ...prev,
       [section]: {
         ...prev[section],
-        [arrayName]: prev[section][arrayName].map((item, i) => 
+        [arrayName]: (prev[section]?.[arrayName] || []).map((item, i) => 
           i === index ? { ...item, [field]: value } : item
         )
       }
@@ -98,7 +98,7 @@ const VisualEditor = () => {
       ...prev,
       [section]: {
         ...prev[section],
-        [arrayName]: [...prev[section][arrayName], newItem]
+        [arrayName]: [...(prev[section]?.[arrayName] || []), newItem]
       }
     }));
   };
@@ -108,7 +108,7 @@ const VisualEditor = () => {
       ...prev,
       [section]: {
         ...prev[section],
-        [arrayName]: prev[section][arrayName].filter((_, i) => i !== index)
+        [arrayName]: (prev[section]?.[arrayName] || []).filter((_, i) => i !== index)
       }
     }));
   };
@@ -281,7 +281,7 @@ const PreviewMode = ({ content }) => {
             </Button>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-              {content.hero.stats.map((stat, index) => (
+              {(content.hero?.stats || []).map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="text-3xl font-bold">{stat.number}</div>
                   <div className="text-sm opacity-90">{stat.label}</div>
@@ -298,7 +298,7 @@ const PreviewMode = ({ content }) => {
             <p className="text-lg text-gray-600 mb-8 text-center">{content.about.description}</p>
             
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {content.about.values.map((value, index) => {
+              {(content.about?.values || []).map((value, index) => {
                 const IconComponent = getIconComponent(value.icon);
                 return (
                   <div key={index} className="text-center">
@@ -320,14 +320,14 @@ const PreviewMode = ({ content }) => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-6">
-            {content.services.services.map((service, index) => (
+            {(content.services?.services || []).map((service, index) => (
               <Card key={index} className="text-center">
                 <CardContent className="p-6">
                   <Heart size={48} className="mx-auto mb-4 text-blue-600" />
                   <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
                   <p className="text-gray-600 mb-4">{service.description}</p>
                   <ul className="text-sm text-gray-500 space-y-1">
-                    {service.features.map((feature, fIndex) => (
+                    {(service.features || []).map((feature, fIndex) => (
                       <li key={fIndex}>• {feature}</li>
                     ))}
                   </ul>
@@ -509,7 +509,7 @@ const EditMode = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {content.hero.stats.map((stat, index) => (
+                  {(content.hero?.stats || []).map((stat, index) => (
                     <div key={index} className="flex items-center space-x-4 p-3 border rounded-lg">
                       <div className="flex-1 grid grid-cols-2 gap-4">
                         <div>
@@ -562,7 +562,7 @@ const EditMode = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {content.hero.achievements.map((achievement, index) => (
+                  {(content.hero?.achievements || []).map((achievement, index) => (
                     <div key={index} className="p-4 border rounded-lg space-y-4">
                       <div className="grid grid-cols-3 gap-4">
                         <div>
@@ -669,7 +669,7 @@ const EditMode = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {content.about.education.map((edu, index) => (
+                  {(content.about?.education || []).map((edu, index) => (
                     <div key={index} className="p-4 border rounded-lg space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -737,7 +737,7 @@ const EditMode = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {content.about.specialties.map((specialty, index) => (
+                  {(content.about?.specialties || []).map((specialty, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <Input
                         value={specialty}
@@ -777,7 +777,7 @@ const EditMode = ({
               </CardHeader>
               <CardContent>
           <div className="space-y-4">
-                  {content.about.values.map((value, index) => (
+                  {(content.about?.values || []).map((value, index) => (
                     <div key={index} className="p-4 border rounded-lg space-y-4">
                       <div className="grid grid-cols-3 gap-4">
                         <div>
@@ -883,7 +883,7 @@ const EditMode = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {content.services.services.map((service, index) => (
+                  {(content.services?.services || []).map((service, index) => (
                     <div key={index} className="p-6 border rounded-lg space-y-4">
                       <div className="grid grid-cols-3 gap-4">
                         <div>
@@ -917,7 +917,7 @@ const EditMode = ({
                       <div>
                         <Label>Características</Label>
                         <div className="space-y-2">
-                          {service.features.map((feature, fIndex) => (
+                          {(service.features || []).map((feature, fIndex) => (
                             <div key={fIndex} className="flex items-center space-x-2">
                               <Input
                                 value={feature}
