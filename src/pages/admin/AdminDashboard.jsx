@@ -9,13 +9,15 @@ import {
   Calendar,
   TrendingUp,
   MessageSquare,
-  Edit3
+  Edit3,
+  Palette
 } from 'lucide-react';
 import BlogEditorSimple from './BlogEditorSimple';
 import ContentEditorAdvanced from './ContentEditorAdvanced';
 import AdminSettingsAdvanced from './AdminSettingsAdvanced';
 import ReviewsManager from './ReviewsManager';
 import WordPressCMS from './WordPressCMS';
+import VisualEditor from './VisualEditor';
 import { blogAPI, reviewsAPI } from '../../config/api';
 
 const AdminDashboard = () => {
@@ -60,6 +62,7 @@ const AdminDashboard = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'visual', label: 'Editor Visual', icon: Palette },
     { id: 'wordpress', label: 'WordPress CMS', icon: Edit3 },
     { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'content', label: 'Editor de Conteúdo', icon: FileText },
@@ -135,6 +138,17 @@ const AdminDashboard = () => {
                 </button>
                 
                 <button
+                  onClick={() => setActiveView('visual')}
+                  className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                >
+                  <Palette className="h-8 w-8 text-purple-600 mr-3" />
+                  <div className="text-left">
+                    <h3 className="font-medium text-gray-900">Editor Visual</h3>
+                    <p className="text-sm text-gray-600">Editar todo o conteúdo do site</p>
+                  </div>
+                </button>
+                
+                <button
                   onClick={() => setActiveView('blog')}
                   className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                 >
@@ -181,6 +195,8 @@ const AdminDashboard = () => {
           </div>
         );
 
+      case 'visual':
+        return <VisualEditor />;
       case 'wordpress':
         return <WordPressCMS />;
       case 'blog':

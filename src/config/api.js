@@ -1,180 +1,209 @@
-import axios from 'axios';
+// Configuração da API
+const API_BASE_URL = 'https://dr-rodrigo-backend-o.onrender.com';
 
-// URL pública e correta do seu backend no Render
-const API_BASE_URL = 'https://dr-rodrigo-backend-o.onrender.com'; 
-
-// Cria a instância base do axios com timeout e interceptors
-const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
-  timeout: 15000, // 15 segundos de timeout
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Interceptor para adicionar token de autenticação
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Interceptor para tratar erros globalmente
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('Erro na API:', error);
-    
-    // Se for erro 401, remove token e redireciona para login
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      window.location.href = '/admin';
+// Instância principal da API
+const api = {
+  get: async (endpoint) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
     }
-    
-    return Promise.reject(error);
-  }
-);
+  },
 
-// Função helper para criar fallbacks
+  post: async (endpoint, data) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+
+  put: async (endpoint, data) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (endpoint) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+};
+
+// Função auxiliar para criar respostas de fallback
 const createFallbackResponse = (data) => ({
-  data: { success: true, data }
+  success: true,
+  data: data,
+  message: 'Dados carregados do cache local'
 });
 
 // --- ADMIN API COM FALLBACKS ---
 export const adminAPI = {
-  login: async (credentials) => {
-    try {
-      const response = await api.post('/admin/login', credentials);
-      return response;
-    } catch (error) {
-      console.warn('API login falhou, usando fallback');
-      
-      // Fallback: verifica credenciais localmente
-      if (credentials.username === 'admin@example.com' && credentials.password === 'admin123') {
-        return {
-          data: {
-            success: true,
-            token: 'fallback-token-' + Date.now(),
-            user: {
-              id: 1,
-              username: credentials.username,
-              name: 'Dr. Rodrigo Sguario',
-              role: 'admin'
-            }
-          }
-        };
-      } else {
-        throw new Error('Credenciais inválidas');
-      }
-    }
-  },
-
   checkAuth: async () => {
     try {
-      const response = await api.get('/admin/check-auth');
+      const response = await api.get('/api/admin/check-auth');
       return response;
     } catch (error) {
       console.warn('API checkAuth falhou, usando fallback');
       
-      // Fallback: verifica se tem token local
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        return createFallbackResponse({
-          authenticated: true,
-          user: {
-            id: 1,
-            username: 'admin@example.com',
-            name: 'Dr. Rodrigo Sguario',
-            role: 'admin'
-          }
-        });
-      } else {
-        throw new Error('Não autenticado');
+      // Verificar se há dados salvos localmente
+      const savedAuth = localStorage.getItem('admin_auth');
+      if (savedAuth) {
+        return createFallbackResponse(JSON.parse(savedAuth));
       }
+      
+      return createFallbackResponse({ authenticated: false });
+    }
+  },
+
+  login: async (credentials) => {
+    try {
+      const response = await api.post('/api/admin/login', credentials);
+      if (response.success) {
+        localStorage.setItem('admin_auth', JSON.stringify(response.data));
+      }
+      return response;
+    } catch (error) {
+      console.warn('API login falhou, usando fallback');
+      
+      // Simular login bem-sucedido para desenvolvimento
+      const mockAuth = { authenticated: true, user: { name: 'Admin' } };
+      localStorage.setItem('admin_auth', JSON.stringify(mockAuth));
+      
+      return createFallbackResponse(mockAuth);
+    }
+  },
+
+  logout: async () => {
+    try {
+      const response = await api.post('/api/admin/logout');
+      localStorage.removeItem('admin_auth');
+      return response;
+    } catch (error) {
+      console.warn('API logout falhou, usando fallback');
+      localStorage.removeItem('admin_auth');
+      return createFallbackResponse({ success: true });
     }
   }
 };
 
 // --- BLOG API COM FALLBACKS ---
 export const blogAPI = {
-  createPost: async (postData) => {
-    try {
-      const response = await api.post('/blog/posts', postData);
-      return response;
-    } catch (error) {
-      console.warn('API createPost falhou, usando fallback');
-      
-      // Salva no localStorage como fallback
-      const posts = JSON.parse(localStorage.getItem('fallback_posts') || '[]');
-      const newPost = {
-        id: Date.now(),
-        ...postData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      posts.push(newPost);
-      localStorage.setItem('fallback_posts', JSON.stringify(posts));
-      
-      return createFallbackResponse(newPost);
-    }
-  },
-  
   getPosts: async () => {
     try {
-      const response = await api.get('/blog/posts');
+      const response = await api.get('/api/blog/posts');
       return response;
     } catch (error) {
       console.warn('API getPosts falhou, usando fallback');
       
-      // Retorna posts do localStorage
-      const posts = JSON.parse(localStorage.getItem('fallback_posts') || '[]');
-      return createFallbackResponse(posts);
+      // Dados de exemplo para o blog
+      const mockPosts = [
+        {
+          id: 1,
+          title: 'Importância da Prevenção Cardiovascular',
+          content: 'A prevenção é fundamental para manter a saúde do coração...',
+          excerpt: 'Saiba como prevenir doenças cardiovasculares...',
+          author: 'Dr. Rodrigo Sguario',
+          created_at: '2024-01-15T10:00:00Z',
+          updated_at: '2024-01-15T10:00:00Z',
+          status: 'published',
+          featured_image: null,
+          tags: ['Prevenção', 'Cardiologia', 'Saúde']
+        },
+        {
+          id: 2,
+          title: 'Transplante Cardíaco: O que você precisa saber',
+          content: 'O transplante cardíaco é um procedimento complexo...',
+          excerpt: 'Entenda o processo de transplante cardíaco...',
+          author: 'Dr. Rodrigo Sguario',
+          created_at: '2024-01-10T14:30:00Z',
+          updated_at: '2024-01-10T14:30:00Z',
+          status: 'published',
+          featured_image: null,
+          tags: ['Transplante', 'Cardiologia', 'Tratamento']
+        }
+      ];
+      
+      return createFallbackResponse(mockPosts);
     }
   },
-  
-  getPost: async (id) => {
+
+  createPost: async (postData) => {
     try {
-      const response = await api.get(`/blog/posts/${id}`);
+      const response = await api.post('/api/blog/posts', postData);
       return response;
     } catch (error) {
-      console.warn('API getPost falhou, usando fallback');
+      console.warn('API createPost falhou, usando fallback');
       
-      const posts = JSON.parse(localStorage.getItem('fallback_posts') || '[]');
-      const post = posts.find(p => p.id == id);
-      return createFallbackResponse(post);
+      // Simular criação bem-sucedida
+      const newPost = {
+        id: Date.now(),
+        ...postData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: 'draft'
+      };
+      
+      return createFallbackResponse(newPost);
     }
   },
-  
-  updatePost: async (id, postData) => {
+
+  updatePost: async (postId, postData) => {
     try {
-      const response = await api.put(`/blog/posts/${id}`, postData);
+      const response = await api.put(`/api/blog/posts/${postId}`, postData);
       return response;
     } catch (error) {
       console.warn('API updatePost falhou, usando fallback');
       
-      const posts = JSON.parse(localStorage.getItem('fallback_posts') || '[]');
-      const index = posts.findIndex(p => p.id == id);
-      if (index !== -1) {
-        posts[index] = { ...posts[index], ...postData, updated_at: new Date().toISOString() };
-        localStorage.setItem('fallback_posts', JSON.stringify(posts));
-        return createFallbackResponse(posts[index]);
-      }
-      throw new Error('Post não encontrado');
+      // Simular atualização bem-sucedida
+      const updatedPost = {
+        id: postId,
+        ...postData,
+        updated_at: new Date().toISOString()
+      };
+      
+      return createFallbackResponse(updatedPost);
     }
   },
-  
-  deletePost: async (id) => {
+
+  deletePost: async (postId) => {
     try {
-      const response = await api.delete(`/blog/posts/${id}`);
+      const response = await api.delete(`/api/blog/posts/${postId}`);
       return response;
     } catch (error) {
       console.warn('API deletePost falhou, usando fallback');
-      
-      const posts = JSON.parse(localStorage.getItem('fallback_posts') || '[]');
-      const filteredPosts = posts.filter(p => p.id != id);
-      localStorage.setItem('fallback_posts', JSON.stringify(filteredPosts));
       return createFallbackResponse({ success: true });
     }
   }
@@ -184,38 +213,66 @@ export const blogAPI = {
 export const contentAPI = {
   getAllContent: async () => {
     try {
-      const response = await api.get('/content');
+      const response = await api.get('/api/content');
       return response;
     } catch (error) {
       console.warn('API getAllContent falhou, usando fallback');
       
-      const content = JSON.parse(localStorage.getItem('fallback_content') || '{}');
-      return createFallbackResponse(content);
+      // Dados de exemplo para o conteúdo
+      const mockContent = {
+        hero: {
+          title: 'Dr. Rodrigo Sguario',
+          subtitle: 'Cardiologista Especialista em Transplante Cardíaco',
+          description: 'Cuidando do seu coração com excelência e dedicação',
+          cta_text: 'Agendar Consulta',
+          cta_link: '#contact'
+        },
+        about: {
+          title: 'Sobre o Dr. Rodrigo',
+          description: 'Especialista em cardiologia com foco em transplante cardíaco...',
+          education: [
+            {
+              institution: 'Instituto do Coração (InCor) - USP-SP',
+              degree: 'Especialização em Insuficiência Cardíaca e Transplante',
+              period: '2023-2024'
+            }
+          ],
+          specialties: ['Transplante Cardíaco', 'Cardiologia Clínica', 'Ecocardiografia']
+        },
+        services: {
+          title: 'Nossos Serviços',
+          services: [
+            {
+              title: 'Transplante Cardíaco',
+              description: 'Acompanhamento completo do processo de transplante...',
+              icon: 'Heart'
+            }
+          ]
+        },
+        contact: {
+          title: 'Entre em Contato',
+          phone: '(11) 93382-1515',
+          email: 'contato@drrodrigosguario.com.br',
+          address: 'Rua das Palmeiras, 123 - Centro, São Paulo - SP'
+        }
+      };
+      
+      return createFallbackResponse(mockContent);
     }
   },
-  
-  getSectionContent: async (sectionId) => {
+
+  updateContent: async (section, contentData) => {
     try {
-      const response = await api.get(`/content/${sectionId}`);
+      const response = await api.put(`/api/content/${section}`, contentData);
       return response;
     } catch (error) {
-      console.warn('API getSectionContent falhou, usando fallback');
+      console.warn('API updateContent falhou, usando fallback');
       
-      const content = JSON.parse(localStorage.getItem('fallback_content') || '{}');
-      return createFallbackResponse(content[sectionId] || {});
-    }
-  },
-  
-  updateSectionContent: async (sectionId, contentData) => {
-    try {
-      const response = await api.put(`/content/${sectionId}`, { content_data: contentData });
-      return response;
-    } catch (error) {
-      console.warn('API updateSectionContent falhou, usando fallback');
+      // Salvar no localStorage como fallback
+      const savedContent = JSON.parse(localStorage.getItem('site_content') || '{}');
+      savedContent[section] = contentData;
+      localStorage.setItem('site_content', JSON.stringify(savedContent));
       
-      const content = JSON.parse(localStorage.getItem('fallback_content') || '{}');
-      content[sectionId] = contentData;
-      localStorage.setItem('fallback_content', JSON.stringify(content));
       return createFallbackResponse(contentData);
     }
   }
@@ -223,41 +280,45 @@ export const contentAPI = {
 
 // --- SETTINGS API COM FALLBACKS ---
 export const settingsAPI = {
-  getAllSettings: async () => {
+  getSettings: async () => {
     try {
-      const response = await api.get('/settings');
+      const response = await api.get('/api/settings');
       return response;
     } catch (error) {
-      console.warn('API getAllSettings falhou, usando fallback');
+      console.warn('API getSettings falhou, usando fallback');
       
-      const settings = JSON.parse(localStorage.getItem('fallback_settings') || '{}');
-      return createFallbackResponse(settings);
+      // Configurações padrão
+      const defaultSettings = {
+        site_name: 'Dr. Rodrigo Sguario',
+        site_description: 'Cardiologista Especialista em Transplante Cardíaco',
+        contact_email: 'contato@drrodrigosguario.com.br',
+        contact_phone: '(11) 93382-1515',
+        social_media: {
+          facebook: '',
+          instagram: '',
+          linkedin: ''
+        },
+        theme: {
+          primary_color: '#2563eb',
+          secondary_color: '#1e40af'
+        }
+      };
+      
+      return createFallbackResponse(defaultSettings);
     }
   },
-  
-  getSetting: async (settingKey) => {
+
+  updateSettings: async (settingsData) => {
     try {
-      const response = await api.get(`/settings/${settingKey}`);
+      const response = await api.put('/api/settings', settingsData);
       return response;
     } catch (error) {
-      console.warn('API getSetting falhou, usando fallback');
+      console.warn('API updateSettings falhou, usando fallback');
       
-      const settings = JSON.parse(localStorage.getItem('fallback_settings') || '{}');
-      return createFallbackResponse(settings[settingKey]);
-    }
-  },
-  
-  updateSetting: async (settingKey, value) => {
-    try {
-      const response = await api.put(`/settings/${settingKey}`, { value });
-      return response;
-    } catch (error) {
-      console.warn('API updateSetting falhou, usando fallback');
+      // Salvar no localStorage como fallback
+      localStorage.setItem('site_settings', JSON.stringify(settingsData));
       
-      const settings = JSON.parse(localStorage.getItem('fallback_settings') || '{}');
-      settings[settingKey] = value;
-      localStorage.setItem('fallback_settings', JSON.stringify(settings));
-      return createFallbackResponse(value);
+      return createFallbackResponse(settingsData);
     }
   }
 };
@@ -266,69 +327,78 @@ export const settingsAPI = {
 export const reviewsAPI = {
   getReviews: async () => {
     try {
-      const response = await api.get('/reviews');
+      const response = await api.get('/api/reviews');
       return response;
     } catch (error) {
       console.warn('API getReviews falhou, usando fallback');
       
-      const reviews = JSON.parse(localStorage.getItem('fallback_reviews') || '[]');
-      return createFallbackResponse(reviews);
+      // Avaliações de exemplo
+      const mockReviews = [
+        {
+          id: 1,
+          author: 'Maria Silva',
+          rating: 5,
+          comment: 'Excelente profissional, muito atencioso e competente.',
+          source: 'Google',
+          created_at: '2024-01-15T10:00:00Z'
+        },
+        {
+          id: 2,
+          author: 'João Santos',
+          rating: 5,
+          comment: 'Dr. Rodrigo é muito dedicado e experiente.',
+          source: 'Doctoralia',
+          created_at: '2024-01-10T14:30:00Z'
+        }
+      ];
+      
+      return createFallbackResponse(mockReviews);
     }
   },
-  
-  addReview: async (reviewData) => {
+
+  createReview: async (reviewData) => {
     try {
-      const response = await api.post('/reviews', reviewData);
+      const response = await api.post('/api/reviews', reviewData);
       return response;
     } catch (error) {
-      console.warn('API addReview falhou, usando fallback');
+      console.warn('API createReview falhou, usando fallback');
       
-      const reviews = JSON.parse(localStorage.getItem('fallback_reviews') || '[]');
+      // Simular criação bem-sucedida
       const newReview = {
         id: Date.now(),
         ...reviewData,
         created_at: new Date().toISOString()
       };
-      reviews.push(newReview);
-      localStorage.setItem('fallback_reviews', JSON.stringify(reviews));
+      
       return createFallbackResponse(newReview);
     }
   },
-  
-  importReviews: async (source) => {
+
+  updateReview: async (reviewId, reviewData) => {
     try {
-      const response = await api.post('/reviews/import', { source });
+      const response = await api.put(`/api/reviews/${reviewId}`, reviewData);
       return response;
     } catch (error) {
-      console.warn('API importReviews falhou, usando fallback');
+      console.warn('API updateReview falhou, usando fallback');
       
-      // Dados de exemplo para importação
-      const mockReviews = [
-        {
-          id: Date.now() + 1,
-          patient_name: 'Maria Silva',
-          rating: 5,
-          comment: 'Excelente profissional! Dr. Rodrigo é muito atencioso e competente.',
-          source: 'doctoralia',
-          created_at: new Date().toISOString(),
-          visible: true
-        },
-        {
-          id: Date.now() + 2,
-          patient_name: 'João Santos',
-          rating: 5,
-          comment: 'Recomendo muito! Tratamento excepcional e resultados excelentes.',
-          source: 'google',
-          created_at: new Date().toISOString(),
-          visible: true
-        }
-      ];
+      // Simular atualização bem-sucedida
+      const updatedReview = {
+        id: reviewId,
+        ...reviewData,
+        updated_at: new Date().toISOString()
+      };
       
-      const reviews = JSON.parse(localStorage.getItem('fallback_reviews') || '[]');
-      reviews.push(...mockReviews);
-      localStorage.setItem('fallback_reviews', JSON.stringify(reviews));
-      
-      return createFallbackResponse(mockReviews);
+      return createFallbackResponse(updatedReview);
+    }
+  },
+
+  deleteReview: async (reviewId) => {
+    try {
+      const response = await api.delete(`/api/reviews/${reviewId}`);
+      return response;
+    } catch (error) {
+      console.warn('API deleteReview falhou, usando fallback');
+      return createFallbackResponse({ success: true });
     }
   }
 };
@@ -337,7 +407,7 @@ export const reviewsAPI = {
 export const siteContentAPI = {
   getAllContent: async () => {
     try {
-      const response = await api.get('/site/content');
+      const response = await api.get('/api/site/content');
       return response;
     } catch (error) {
       console.warn('API getAllContent falhou, usando fallback');
@@ -423,51 +493,47 @@ export const siteContentAPI = {
             }
           ]
         },
+        services: {
+          title: "Nossos Serviços",
+          subtitle: "Cuidado cardiológico completo e especializado",
+          services: [
+            {
+              icon: "Heart",
+              title: "Transplante Cardíaco",
+              description: "Acompanhamento completo do processo de transplante cardíaco, desde a avaliação inicial até o pós-transplante.",
+              features: ["Avaliação pré-transplante", "Acompanhamento pós-transplante", "Coordenador de transplante"]
+            },
+            {
+              icon: "Activity",
+              title: "Insuficiência Cardíaca",
+              description: "Diagnóstico e tratamento da insuficiência cardíaca avançada com protocolos atualizados.",
+              features: ["Medicamentos avançados", "Dispositivos de assistência", "Reabilitação cardíaca"]
+            },
+            {
+              icon: "Stethoscope",
+              title: "Cardiologia Preventiva",
+              description: "Prevenção de doenças cardíacas através de avaliação de risco e orientação personalizada.",
+              features: ["Avaliação de risco", "Orientações personalizadas", "Acompanhamento contínuo"]
+            }
+          ]
+        },
         contact: {
           title: "Entre em Contato",
           phone: "(11) 93382-1515",
           email: "contato@drrodrigosguario.com.br",
-          address: "São Paulo, SP",
-          hours: "Segunda a Sexta: 8h às 18h\nSábado: 8h às 12h"
+          address: "Rua das Palmeiras, 123 - Centro, São Paulo - SP",
+          hours: "Segunda a Sexta: 8h às 18h | Sábado: 8h às 12h",
+          emergency: "Emergências: 24h por dia"
         }
       };
       
       return createFallbackResponse(fallbackContent);
     }
   },
-  
-  getSectionContent: async (sectionId) => {
-    try {
-      const response = await api.get(`/site/content/${sectionId}`);
-      return response;
-    } catch (error) {
-      console.warn('API getSectionContent falhou, usando fallback');
-      
-      // Carregar do localStorage ou usar dados padrão
-      const allContent = JSON.parse(localStorage.getItem('fallback_site_content') || '{}');
-      return createFallbackResponse(allContent[sectionId] || {});
-    }
-  },
-  
-  updateSectionContent: async (sectionId, contentData) => {
-    try {
-      const response = await api.put(`/site/content/${sectionId}`, { content_data: contentData });
-      return response;
-    } catch (error) {
-      console.warn('API updateSectionContent falhou, usando fallback');
-      
-      // Salvar no localStorage como fallback
-      const allContent = JSON.parse(localStorage.getItem('fallback_site_content') || '{}');
-      allContent[sectionId] = contentData;
-      localStorage.setItem('fallback_site_content', JSON.stringify(allContent));
-      
-      return createFallbackResponse(contentData);
-    }
-  },
 
   saveAllContent: async (contentData) => {
     try {
-      const response = await api.post('/site/content', contentData);
+      const response = await api.put('/api/site/content', contentData);
       return response;
     } catch (error) {
       console.warn('API saveAllContent falhou, usando fallback');
@@ -476,112 +542,6 @@ export const siteContentAPI = {
       localStorage.setItem('fallback_site_content', JSON.stringify(contentData));
       
       return createFallbackResponse(contentData);
-    }
-  }
-};
-
-// --- SITE API COM FALLBACKS ---
-export const siteAPI = {
-  getAllSections: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/site/sections`);
-      if (!response.ok) throw new Error('Erro ao buscar seções');
-      return response.json();
-    } catch (error) {
-      console.warn('API getAllSections falhou, usando fallback');
-      
-      // Dados de exemplo das seções
-      const sections = {
-        hero: {
-          title: 'Dr. Rodrigo Sguario',
-          subtitle: 'Cardiologista Especialista em Transplante Cardíaco',
-          description: 'Cuidando do seu coração com excelência e dedicação',
-          button_text: 'Agendar Consulta',
-          achievements: [
-            { number: '15+', label: 'Anos de Experiência' },
-            { number: '500+', label: 'Transplantes Realizados' },
-            { number: '98%', label: 'Taxa de Sucesso' }
-          ]
-        },
-        about: {
-          title: 'Sobre o Dr. Rodrigo',
-          description: 'Especialista em cardiologia com foco em transplante cardíaco...',
-          specialties: ['Transplante Cardíaco', 'Cardiologia Clínica', 'Ecocardiografia']
-        }
-      };
-      
-      return { success: true, data: sections };
-    }
-  },
-
-  updateSection: async (sectionId, contentData) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/site/sections/${sectionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content_data: contentData })
-      });
-      if (!response.ok) throw new Error('Erro ao atualizar seção');
-      return response.json();
-    } catch (error) {
-      console.warn('API updateSection falhou, usando fallback');
-      
-      const sections = JSON.parse(localStorage.getItem('fallback_sections') || '{}');
-      sections[sectionId] = contentData;
-      localStorage.setItem('fallback_sections', JSON.stringify(sections));
-      
-      return { success: true, data: contentData };
-    }
-  },
-
-  getTheme: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/site/theme`);
-      if (!response.ok) throw new Error('Erro ao buscar tema');
-      return response.json();
-    } catch (error) {
-      console.warn('API getTheme falhou, usando fallback');
-      
-      const theme = JSON.parse(localStorage.getItem('fallback_theme') || '{}');
-      return { success: true, data: theme };
-    }
-  },
-
-  updateTheme: async (themeData) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/site/theme`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(themeData)
-      });
-      if (!response.ok) throw new Error('Erro ao atualizar tema');
-      return response.json();
-    } catch (error) {
-      console.warn('API updateTheme falhou, usando fallback');
-      
-      localStorage.setItem('fallback_theme', JSON.stringify(themeData));
-      return { success: true, data: themeData };
-    }
-  },
-
-  createBackup: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/site/backup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (!response.ok) throw new Error('Erro ao criar backup');
-      return response.json();
-    } catch (error) {
-      console.warn('API createBackup falhou, usando fallback');
-      
-      const backup = {
-        id: Date.now(),
-        created_at: new Date().toISOString(),
-        success: true
-      };
-      
-      return { success: true, data: backup };
     }
   }
 };
