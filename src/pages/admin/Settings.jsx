@@ -7,12 +7,26 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Palette, Moon, Sun, Save, CheckCircle, Settings as SettingsIcon } from 'lucide-react';
-import { useTheme } from '../../components/ThemeProvider';
 import { settingsAPI } from '../../config/api';
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { currentPalette, isDark, changePalette, toggleTheme, getAllPalettes } = useTheme();
+  // Valores padrão para evitar erros
+  const currentPalette = 'default';
+  const isDark = false;
+  const changePalette = () => {};
+  const toggleTheme = () => {};
+  const getAllPalettes = () => ({
+    default: {
+      name: 'Azul Chumbo Moderno',
+      primary: '#475569',
+      secondary: '#334155',
+      accent: '#64748B',
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444'
+    }
+  });
   
   const [settings, setSettings] = useState({
     siteName: 'Dr. Rodrigo Sguario - Cardiologista',
