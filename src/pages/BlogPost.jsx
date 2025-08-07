@@ -22,6 +22,7 @@ const BlogPost = () => {
   const loadPost = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // Se temos o post no state da navegação, usar ele
       if (location.state?.post) {
@@ -34,18 +35,28 @@ const BlogPost = () => {
       const response = await blogAPI.getPosts();
       const posts = response.data || [];
       
-      // Encontrar o post pelo slug
+      console.log('Posts carregados:', posts);
+      console.log('Slug procurado:', slug);
+      
+      // Encontrar o post pelo slug de forma mais robusta
       const foundPost = posts.find(p => {
+        if (!p.titulo) return false;
+        
         const postSlug = p.titulo
           .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove acentos
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-')
           .replace(/-+/g, '-')
           .trim();
+        
+        console.log('Slug do post:', postSlug, 'vs slug procurado:', slug);
         return postSlug === slug;
       });
 
       if (foundPost) {
+        console.log('Post encontrado:', foundPost);
         setPost({
           id: foundPost.id,
           title: foundPost.titulo,
@@ -58,6 +69,7 @@ const BlogPost = () => {
           author: "Dr. Rodrigo Sguario"
         });
       } else {
+        console.log('Post não encontrado para slug:', slug);
         setError('Artigo não encontrado');
       }
     } catch (error) {

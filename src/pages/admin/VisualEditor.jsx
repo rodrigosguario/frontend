@@ -181,12 +181,25 @@ const VisualEditor = () => {
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const data = await siteContentAPI.getAllContent();
-        if (data && data.data) {
-          setContent(data.data);
+        console.log('Carregando conteúdo do site...');
+        const response = await siteContentAPI.getAllContent();
+        console.log('Resposta da API:', response);
+        
+        if (response && response.data) {
+          console.log('Dados carregados:', response.data);
+          setContent(response.data);
+        } else if (response && response.content) {
+          // Fallback para estrutura alternativa
+          console.log('Usando estrutura alternativa:', response.content);
+          setContent(response.content);
+        } else {
+          console.warn('Estrutura de resposta inesperada:', response);
+          // Manter o conteúdo padrão que já está definido
         }
       } catch (error) {
-        console.warn('Erro ao carregar conteúdo, usando dados padrão');
+        console.error('Erro ao carregar conteúdo:', error);
+        console.warn('Usando dados padrão devido ao erro');
+        // O conteúdo padrão já está definido no estado inicial
       }
     };
     loadContent();

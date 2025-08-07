@@ -408,7 +408,16 @@ export const siteContentAPI = {
   getAllContent: async () => {
     try {
       const response = await api.get('/api/site/content');
-      return response;
+      console.log('API getAllContent resposta:', response);
+      
+      // A API retorna os dados diretamente, não dentro de um objeto 'data'
+      if (response && response.data) {
+        return { data: response.data };
+      } else if (response) {
+        return { data: response };
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
     } catch (error) {
       console.warn('API getAllContent falhou, usando fallback');
       
