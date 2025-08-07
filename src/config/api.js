@@ -1,5 +1,5 @@
 // Configuração da API
-const API_BASE_URL = 'https://dr-rodrigo-backend-o.onrender.com';
+const API_BASE_URL = 'https://dr-rodrigo-backend.onrender.com';
 
 // Instância principal da API
 const api = {
