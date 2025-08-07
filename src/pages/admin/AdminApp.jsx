@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from '../../components/AdminDashboard';
-import { checkAuth } from '../../config/auth';
+import { adminAPI } from '../../config/api';
 
 const AdminApp = () => {
   const [admin, setAdmin] = useState(null);
@@ -13,7 +13,7 @@ const AdminApp = () => {
 
   const checkAuthStatus = async () => {
     try {
-      const response = checkAuth();
+      const response = await adminAPI.checkAuth();
       console.log('Status de autenticação:', response);
       
       if (response.success && response.data.authenticated) {

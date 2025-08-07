@@ -63,17 +63,11 @@ const About = () => {
     try {
       setLoading(true);
       
-      // Tentar carregar conteúdo específico da seção about
-      const response = await siteContentAPI.getSectionContent('about');
+      // Carregar todo o conteúdo e extrair a seção about
+      const allContentResponse = await siteContentAPI.getAllContent();
       
-      if (response.data && response.data.data) {
-        setAboutData(response.data.data);
-      } else {
-        // Se não encontrar seção específica, tentar carregar todo o conteúdo
-        const allContentResponse = await siteContentAPI.getAllContent();
-        if (allContentResponse.data && allContentResponse.data.data && allContentResponse.data.data.about) {
-          setAboutData(allContentResponse.data.data.about);
-        }
+      if (allContentResponse.success && allContentResponse.data && allContentResponse.data.about) {
+        setAboutData(allContentResponse.data.about);
       }
     } catch (error) {
       console.error('Erro ao carregar conteúdo do About:', error);

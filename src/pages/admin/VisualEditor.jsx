@@ -31,7 +31,7 @@ import {
   Sun,
   Moon
 } from 'lucide-react';
-import { loadContent, saveContent } from '../../config/contentManager';
+import { siteContentAPI } from '../../config/api';
 import { useTheme } from '../../components/ThemeProvider';
 
 const VisualEditor = () => {
@@ -49,15 +49,14 @@ const VisualEditor = () => {
     const loadSiteContent = async () => {
       try {
         console.log('Carregando conteúdo do site...');
-        const response = loadContent();
-        console.log('Resposta do contentManager:', response);
+        const response = await siteContentAPI.getAllContent();
+        console.log('Resposta da API:', response);
         
         if (response.success && response.data) {
           console.log('Dados carregados:', response.data);
           setContent(response.data);
         } else {
           console.warn('Erro ao carregar conteúdo, usando dados padrão');
-          // O contentManager já fornece dados padrão
           setContent(response.data || {});
         }
       } catch (error) {
@@ -130,13 +129,13 @@ const VisualEditor = () => {
     try {
       setSaving(true);
       setSaveStatus('Salvando...');
-      const response = saveContent(content);
+      const response = await siteContentAPI.updateContent(content);
       if (response.success) {
         setSaveStatus('Salvo com sucesso!');
         console.log('Conteúdo salvo com sucesso:', response.data);
       } else {
         setSaveStatus('Erro ao salvar conteúdo.');
-        console.error('Erro ao salvar conteúdo:', response.error);
+        console.error('Erro ao salvar conteúdo:', response.message);
       }
     } catch (error) {
       setSaveStatus('Erro ao salvar conteúdo.');
@@ -152,7 +151,7 @@ const VisualEditor = () => {
       try {
         setSaving(true);
         setSaveStatus('Salvando...');
-        const response = saveContent(newContent);
+        const response = await siteContentAPI.updateContent(newContent);
         if (response.success) {
           setSaveStatus('Salvo automaticamente');
         } else {

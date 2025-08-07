@@ -13,10 +13,10 @@ export const useTheme = () => {
 // Paletas de cores predefinidas
 const colorPalettes = {
   default: {
-    name: 'Azul Médico',
-    primary: '#3B82F6',
-    secondary: '#1E40AF',
-    accent: '#60A5FA',
+    name: 'Azul Chumbo Moderno',
+    primary: '#475569',
+    secondary: '#334155',
+    accent: '#64748B',
     success: '#10B981',
     warning: '#F59E0B',
     error: '#EF4444'

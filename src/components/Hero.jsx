@@ -44,17 +44,11 @@ const Hero = () => {
     try {
       setLoading(true);
       
-      // Tentar carregar conteúdo específico da seção hero
-      const response = await siteContentAPI.getSectionContent('hero');
+      // Carregar todo o conteúdo e extrair a seção hero
+      const allContentResponse = await siteContentAPI.getAllContent();
       
-      if (response.data && response.data.data) {
-        setHeroData(response.data.data);
-      } else {
-        // Se não encontrar seção específica, tentar carregar todo o conteúdo
-        const allContentResponse = await siteContentAPI.getAllContent();
-        if (allContentResponse.data && allContentResponse.data.data && allContentResponse.data.data.hero) {
-          setHeroData(allContentResponse.data.data.hero);
-        }
+      if (allContentResponse.success && allContentResponse.data && allContentResponse.data.hero) {
+        setHeroData(allContentResponse.data.hero);
       }
     } catch (error) {
       console.error('Erro ao carregar conteúdo do Hero:', error);

@@ -13,7 +13,7 @@ import {
   Clock,
   CheckCircle
 } from 'lucide-react';
-import { logout } from '../config/auth';
+import { adminAPI } from '../config/api';
 
 const AdminDashboard = ({ admin, onLogout }) => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -54,7 +54,7 @@ const AdminDashboard = ({ admin, onLogout }) => {
 
   const handleLogout = async () => {
     try {
-      logout();
+      await adminAPI.logout();
       onLogout();
     } catch (error) {
       console.error('Erro no logout:', error);

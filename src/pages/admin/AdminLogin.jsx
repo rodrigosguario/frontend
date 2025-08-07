@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { login } from '../../config/auth';
+import { adminAPI } from '../../config/api';
 
 const AdminLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -18,7 +18,7 @@ const AdminLogin = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = login({ username, password });
+                    const response = await adminAPI.login({ username, password });
       
       if (response.success) {
         if (onLogin) {
