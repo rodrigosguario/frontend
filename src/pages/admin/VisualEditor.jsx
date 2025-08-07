@@ -35,7 +35,7 @@ import { siteContentAPI } from '../../config/api';
 import { useTheme } from '../../components/ThemeProvider';
 
 const VisualEditor = () => {
-  const { currentPalette, changePalette, getCurrentPalette, getAllPalettes, isDark, toggleTheme } = useTheme();
+  const { currentPalette, changePalette, getCurrentPalette, getAllPalettes, isDark = false, toggleTheme } = useTheme();
   const [content, setContent] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1067,7 +1067,7 @@ const EditMode = ({
                   <div className="flex gap-4 mt-2">
                     <Button
                       variant={!isDark ? "default" : "outline"}
-                      onClick={() => !isDark || toggleTheme()}
+                      onClick={() => toggleTheme()}
                       className="flex items-center gap-2"
                     >
                       <Sun className="w-4 h-4" />
@@ -1075,7 +1075,7 @@ const EditMode = ({
                     </Button>
                     <Button
                       variant={isDark ? "default" : "outline"}
-                      onClick={() => isDark || toggleTheme()}
+                      onClick={() => toggleTheme()}
                       className="flex items-center gap-2"
                     >
                       <Moon className="w-4 h-4" />
