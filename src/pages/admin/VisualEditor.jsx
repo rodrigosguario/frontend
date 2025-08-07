@@ -26,11 +26,16 @@ import {
   Clock,
   Star,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Palette,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { siteContentAPI } from '../../config/api';
+import { useTheme } from '../../components/ThemeProvider';
 
 const VisualEditor = () => {
+  const { currentPalette, changePalette, getCurrentPalette, getAllPalettes, isDark, toggleTheme } = useTheme();
   const [content, setContent] = useState({
     hero: {
       title: "Dr. Rodrigo Sguario",
@@ -477,11 +482,12 @@ const EditMode = ({
       {/* Área de Edição */}
       <div className="lg:col-span-2">
         <Tabs value={activeSection} onValueChange={setActiveSection}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="hero">Hero</TabsTrigger>
             <TabsTrigger value="about">Sobre</TabsTrigger>
             <TabsTrigger value="services">Serviços</TabsTrigger>
             <TabsTrigger value="contact">Contato</TabsTrigger>
+            <TabsTrigger value="colors">Cores</TabsTrigger>
           </TabsList>
 
           {/* Hero Section */}
@@ -1111,6 +1117,118 @@ const EditMode = ({
                   </div>
                 </CardContent>
               )}
+            </Card>
+          </TabsContent>
+
+          {/* Colors Section */}
+          <TabsContent value="colors" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="w-5 h-5" />
+                  Configuração de Cores do Site
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Tema Claro/Escuro */}
+                <div>
+                  <Label className="text-base font-medium">Modo de Tema</Label>
+                  <div className="flex gap-4 mt-2">
+                    <Button
+                      variant={!isDark ? "default" : "outline"}
+                      onClick={() => !isDark || toggleTheme()}
+                      className="flex items-center gap-2"
+                    >
+                      <Sun className="w-4 h-4" />
+                      Claro
+                    </Button>
+                    <Button
+                      variant={isDark ? "default" : "outline"}
+                      onClick={() => isDark || toggleTheme()}
+                      className="flex items-center gap-2"
+                    >
+                      <Moon className="w-4 h-4" />
+                      Escuro
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Paletas de Cores */}
+                <div>
+                  <Label className="text-base font-medium">Paleta de Cores</Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Escolha uma paleta de cores para personalizar a aparência do site
+                  </p>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {Object.entries(getAllPalettes()).map(([key, palette]) => (
+                      <div
+                        key={key}
+                        onClick={() => changePalette(key)}
+                        className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all hover:scale-105 ${
+                          currentPalette === key 
+                            ? 'border-primary ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-sm">{palette.name}</span>
+                            {currentPalette === key && (
+                              <CheckCircle className="w-4 h-4 text-primary" />
+                            )}
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <div 
+                              className="w-6 h-6 rounded-full border border-border"
+                              style={{ backgroundColor: palette.primary }}
+                            />
+                            <div 
+                              className="w-6 h-6 rounded-full border border-border"
+                              style={{ backgroundColor: palette.secondary }}
+                            />
+                            <div 
+                              className="w-6 h-6 rounded-full border border-border"
+                              style={{ backgroundColor: palette.accent }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview da Paleta Atual */}
+                <div>
+                  <Label className="text-base font-medium">Paleta Atual</Label>
+                  <div className="mt-2 p-4 bg-muted rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {Object.entries(getCurrentPalette()).map(([key, color]) => {
+                        if (key === 'name') return null;
+                        return (
+                          <div key={key} className="flex items-center gap-3">
+                            <div 
+                              className="w-8 h-8 rounded-lg border border-border"
+                              style={{ backgroundColor: color }}
+                            />
+                            <div>
+                              <div className="font-medium text-sm capitalize">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-mono">
+                                {color}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>

@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, ArrowRight, BookOpen, Eye, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { blogAPI } from '@/config/api';
 
 const BlogSection = () => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -109,6 +111,20 @@ const BlogSection = () => {
   const getCategoryColor = (categoryName) => {
     const category = categories.find(cat => cat.name === categoryName);
     return category?.color || '#3B82F6';
+  };
+
+  const handleReadArticle = (post) => {
+    // Criar um slug baseado no título do post
+    const slug = post.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    
+    navigate(`/blog/${slug}`, { 
+      state: { post } 
+    });
   };
 
   const filteredPosts = selectedCategory 
@@ -216,6 +232,7 @@ const BlogSection = () => {
                         variant="ghost" 
                         size="sm"
                         className="w-full justify-between group hover:bg-primary/5"
+                        onClick={() => handleReadArticle(post)}
                       >
                         Ler artigo
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-all duration-300 ease-in-out" />
@@ -316,6 +333,7 @@ const BlogSection = () => {
                     variant="ghost" 
                     size="sm"
                     className="w-full justify-between group hover:bg-primary/5"
+                    onClick={() => handleReadArticle(post)}
                   >
                     Ler artigo
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-all duration-300 ease-in-out" />
