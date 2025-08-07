@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import AdminLogin from './AdminLogin';
-import AdminDashboard from './AdminDashboard';
-import { adminAPI } from '@/config/api';
+import AdminDashboard from '../../components/AdminDashboard';
+import { adminAPI } from '../../config/api';
 
 const AdminApp = () => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    checkAuthStatus();
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuthStatus = async () => {
     try {
       const response = await adminAPI.checkAuth();
-      const data = response.data;
+      console.log('Status de autenticação:', response);
       
-      if (data.authenticated) {
-        setAdmin(data.admin);
+      if (response.success && response.data.authenticated) {
+        setAdmin(response.data.admin || response.data.user);
+      } else {
+        setAdmin(null);
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
-      // Se der erro na verificação, assume que não está autenticado
       setAdmin(null);
     } finally {
       setLoading(false);

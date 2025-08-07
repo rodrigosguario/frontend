@@ -36,192 +36,39 @@ import { useTheme } from '../../components/ThemeProvider';
 
 const VisualEditor = () => {
   const { currentPalette, changePalette, getCurrentPalette, getAllPalettes, isDark, toggleTheme } = useTheme();
-  const [content, setContent] = useState({
-    hero: {
-      title: "Dr. Rodrigo Sguario",
-      subtitle: "Cardiologista Especialista em Transplante Cardíaco",
-      description: "Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.",
-      cta_text: "Agendar Consulta",
-      cta_link: "#contact",
-      achievements: [
-        {
-          icon: "Heart",
-          title: "Referência em Transplante",
-          description: "Liderança e experiência em transplantes cardíacos"
-        },
-        {
-          icon: "Award", 
-          title: "Tecnologia Avançada",
-          description: "Equipamentos de última geração para diagnósticos precisos"
-        },
-        {
-          icon: "Users",
-          title: "Atendimento Humanizado", 
-          description: "Cuidado focado no paciente, com empatia e atenção"
-        }
-      ],
-      stats: [
-        { number: "500+", label: "Pacientes Atendidos" },
-        { number: "15+", label: "Anos de Experiência" },
-        { number: "5.0", label: "Avaliação Média" },
-        { number: "24h", label: "Suporte Emergencial" }
-      ]
-    },
-    about: {
-      title: "Sobre o Dr. Rodrigo",
-      description: "Médico cardiologista com ampla experiência em transplante cardíaco e cuidado humanizado.",
-      education: [
-        {
-          institution: "Instituto do Coração (InCor) - USP-SP",
-          degree: "Especialização em Insuficiência Cardíaca e Transplante",
-          period: "2023-2024",
-          description: "Centro de referência em cardiologia da América Latina"
-        },
-        {
-          institution: "UNICAMP",
-          degree: "Residência em Cardiologia",
-          period: "2021-2023",
-          description: "Formação especializada em cardiologia clínica e intervencionista"
-        },
-        {
-          institution: "Universidade Federal de Pelotas (UFPel)",
-          degree: "Graduação em Medicina",
-          period: "2015-2020",
-          description: "Formação médica com foco humanizado"
-        }
-      ],
-      specialties: [
-        "Transplante Cardíaco",
-        "Insuficiência Cardíaca Avançada",
-        "Cardiologia Preventiva",
-        "Ecocardiografia",
-        "Cateterismo Cardíaco",
-        "Reabilitação Cardíaca"
-      ],
-      values: [
-        {
-          icon: "Heart",
-          title: "Formação de Excelência",
-          description: "InCor-USP, UNICAMP e UFPel. Formação acadêmica completa."
-        },
-        {
-          icon: "Users",
-          title: "Foco no Paciente",
-          description: "Cuidado centrado nas necessidades individuais de cada paciente."
-        },
-        {
-          icon: "BookOpen",
-          title: "Atualização Constante",
-          description: "Sempre em busca das mais recentes inovações em cardiologia."
-        }
-      ]
-    },
-    services: {
-      title: "Nossos Serviços",
-      subtitle: "Cuidado cardiológico completo e especializado",
-      services: [
-        {
-          icon: "Heart",
-          title: "Transplante Cardíaco",
-          description: "Acompanhamento completo do processo de transplante cardíaco, desde a avaliação inicial até o pós-transplante.",
-          features: ["Avaliação pré-transplante", "Acompanhamento pós-transplante", "Coordenador de transplante"]
-        },
-        {
-          icon: "Activity",
-          title: "Insuficiência Cardíaca",
-          description: "Diagnóstico e tratamento da insuficiência cardíaca avançada com protocolos atualizados.",
-          features: ["Medicamentos avançados", "Dispositivos de assistência", "Reabilitação cardíaca"]
-        },
-        {
-          icon: "Stethoscope",
-          title: "Cardiologia Preventiva",
-          description: "Prevenção de doenças cardíacas através de avaliação de risco e orientação personalizada.",
-          features: ["Avaliação de risco", "Orientações personalizadas", "Acompanhamento contínuo"]
-        }
-      ]
-    },
-    contact: {
-      title: "Entre em Contato",
-      phone: "(11) 93382-1515",
-      email: "contato@drrodrigosguario.com.br",
-      address: "Rua das Palmeiras, 123 - Centro, São Paulo - SP",
-      hours: "Segunda a Sexta: 8h às 18h | Sábado: 8h às 12h",
-      emergency: "Emergências: 24h por dia"
-    }
-  });
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const [content, setContent] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
   const [activeSection, setActiveSection] = useState('hero');
-  const [expandedSections, setExpandedSections] = useState({
-    hero: true,
-    about: true,
-    services: true,
-    contact: true
-  });
+  const [expandedSections, setExpandedSections] = useState(new Set(['hero']));
+  const [mode, setMode] = useState('edit'); // 'edit' or 'preview'
 
-  // Auto-save com debounce
-  const autoSave = useCallback(
-    debounce(async (newContent) => {
-      try {
-        setIsSaving(true);
-        await siteContentAPI.saveAllContent(newContent);
-        setLastSaved(new Date());
-      } catch (error) {
-        console.warn('Auto-save falhou:', error);
-      } finally {
-        setIsSaving(false);
-      }
-    }, 2000),
-    []
-  );
-
-  // Carregar conteúdo inicial
+  // Carregar conteúdo
   useEffect(() => {
-    const loadContent = async () => {
+    const loadSiteContent = async () => {
       try {
         console.log('Carregando conteúdo do site...');
         const response = await siteContentAPI.getAllContent();
         console.log('Resposta da API:', response);
         
-        if (response && response.data) {
+        if (response.success && response.data) {
           console.log('Dados carregados:', response.data);
           setContent(response.data);
-        } else if (response && response.content) {
-          // Fallback para estrutura alternativa
-          console.log('Usando estrutura alternativa:', response.content);
-          setContent(response.content);
         } else {
-          console.warn('Estrutura de resposta inesperada:', response);
-          // Manter o conteúdo padrão que já está definido
+          console.warn('Erro ao carregar conteúdo, usando dados padrão');
+          setContent(response.data || {});
         }
       } catch (error) {
         console.error('Erro ao carregar conteúdo:', error);
-        console.warn('Usando dados padrão devido ao erro');
-        // O conteúdo padrão já está definido no estado inicial
+        setContent({});
+      } finally {
+        setLoading(false);
       }
     };
-    loadContent();
+    
+    loadSiteContent();
   }, []);
-
-  // Auto-save quando conteúdo muda
-  useEffect(() => {
-    autoSave(content);
-  }, [content, autoSave]);
-
-  // Função debounce
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
 
   // Funções auxiliares
   const updateContent = (section, field, value) => {
@@ -267,11 +114,82 @@ const VisualEditor = () => {
   };
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(section)) {
+        newSet.delete(section);
+      } else {
+        newSet.add(section);
+      }
+      return newSet;
+    });
   };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setSaveStatus('Salvando...');
+      const response = await siteContentAPI.updateContent(content);
+      if (response.success) {
+        setSaveStatus('Salvo com sucesso!');
+        console.log('Conteúdo salvo com sucesso:', response.data);
+      } else {
+        setSaveStatus('Erro ao salvar conteúdo.');
+        console.error('Erro ao salvar conteúdo:', response.message);
+      }
+    } catch (error) {
+      setSaveStatus('Erro ao salvar conteúdo.');
+      console.error('Erro ao salvar conteúdo:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Auto-save com debounce
+  const autoSave = useCallback(
+    debounce(async (newContent) => {
+      try {
+        setSaving(true);
+        setSaveStatus('Salvando...');
+        const response = await siteContentAPI.updateContent(newContent);
+        if (response.success) {
+          setSaveStatus('Salvo automaticamente');
+        } else {
+          setSaveStatus('Erro no auto-save');
+        }
+      } catch (error) {
+        console.warn('Auto-save falhou:', error);
+        setSaveStatus('Erro no auto-save');
+      } finally {
+        setSaving(false);
+      }
+    }, 2000),
+    []
+  );
+
+  // Auto-save quando conteúdo muda
+  useEffect(() => {
+    if (Object.keys(content).length > 0) {
+      autoSave(content);
+    }
+  }, [content, autoSave]);
+
+  // Função debounce
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  if (loading) {
+    return <div className="text-center py-8">Carregando conteúdo...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -282,30 +200,30 @@ const VisualEditor = () => {
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-gray-900">Editor Visual</h1>
               <Badge variant="outline" className="text-sm">
-                {showPreview ? 'Preview' : 'Edição'}
+                {mode === 'preview' ? 'Preview' : 'Edição'}
               </Badge>
             </div>
             
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                onClick={() => setShowPreview(!showPreview)}
+                onClick={() => setMode(prev => prev === 'edit' ? 'preview' : 'edit')}
                 className="flex items-center space-x-2"
               >
-                {showPreview ? <Edit3 size={16} /> : <Eye size={16} />}
-                <span>{showPreview ? 'Editar' : 'Preview'}</span>
+                {mode === 'preview' ? <Edit3 size={16} /> : <Eye size={16} />}
+                <span>{mode === 'preview' ? 'Editar' : 'Preview'}</span>
               </Button>
               
               <div className="flex items-center space-x-2 text-sm text-gray-500">
-                {isSaving ? (
+                {saving ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span>Salvando...</span>
+                    <span>{saveStatus}</span>
                   </>
-                ) : lastSaved ? (
+                ) : saveStatus ? (
                   <>
                     <CheckCircle size={16} className="text-green-500" />
-                    <span>Salvo às {lastSaved.toLocaleTimeString()}</span>
+                    <span>{saveStatus}</span>
                   </>
                 ) : (
                   <>
@@ -320,7 +238,7 @@ const VisualEditor = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {showPreview ? (
+        {mode === 'preview' ? (
           <PreviewMode content={content} />
         ) : (
                      <EditMode 
@@ -514,11 +432,11 @@ const EditMode = ({
                     size="sm"
                     onClick={() => toggleSection('hero')}
                   >
-                    {expandedSections.hero ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {expandedSections.has('hero') ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </Button>
                 </CardTitle>
               </CardHeader>
-              {expandedSections.hero && (
+              {expandedSections.has('hero') && (
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="hero-title">Título Principal</Label>
@@ -700,11 +618,11 @@ const EditMode = ({
                     size="sm"
                     onClick={() => toggleSection('about')}
                   >
-                    {expandedSections.about ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {expandedSections.has('about') ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </Button>
                 </CardTitle>
               </CardHeader>
-              {expandedSections.about && (
+              {expandedSections.has('about') && (
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="about-title">Título da Seção</Label>
@@ -915,11 +833,11 @@ const EditMode = ({
                     size="sm"
                     onClick={() => toggleSection('services')}
                   >
-                    {expandedSections.services ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {expandedSections.has('services') ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </Button>
                 </CardTitle>
               </CardHeader>
-              {expandedSections.services && (
+              {expandedSections.has('services') && (
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="services-title">Título da Seção</Label>
@@ -1062,11 +980,11 @@ const EditMode = ({
                     size="sm"
                     onClick={() => toggleSection('contact')}
                   >
-                    {expandedSections.contact ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {expandedSections.has('contact') ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </Button>
                 </CardTitle>
               </CardHeader>
-              {expandedSections.contact && (
+              {expandedSections.has('contact') && (
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="contact-title">Título da Seção</Label>

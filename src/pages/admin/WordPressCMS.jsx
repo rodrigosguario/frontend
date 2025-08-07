@@ -82,9 +82,9 @@ const WordPressCMS = () => {
   const handleAutoSave = async () => {
     try {
       setSaving(true);
-      const response = await siteContentAPI.saveAllContent(siteContent);
+      const response = await siteContentAPI.updateContent(siteContent);
 
-      if (response.data && response.data.success) {
+      if (response.success) {
         setLastSaved(new Date());
         showNotification('Salvo automaticamente', 'success');
       }
@@ -101,9 +101,9 @@ const WordPressCMS = () => {
   const handleManualSave = async () => {
     try {
       setSaving(true);
-      const response = await siteContentAPI.saveAllContent(siteContent);
+      const response = await siteContentAPI.updateContent(siteContent);
 
-      if (response.data && response.data.success) {
+      if (response.success) {
         setLastSaved(new Date());
         showNotification('Conteúdo salvo com sucesso!', 'success');
       } else {
