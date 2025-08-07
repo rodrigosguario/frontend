@@ -1,4 +1,4 @@
-// Configuração da API
+// Configuração da API - Força rebuild para corrigir URL
 const API_BASE_URL = 'https://dr-rodrigo-backend.onrender.com';
 
 // Instância principal da API
