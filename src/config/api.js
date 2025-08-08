@@ -1,5 +1,5 @@
-// Sistema de API completamente independente - Funciona offline
-// Todas as funcionalidades são gerenciadas localmente
+// Sistema de API híbrido - Tenta backend primeiro, fallback para local
+const API_BASE_URL = 'https://dr-rodrigo-backend-main.onrender.com';
 
 // Função auxiliar para criar respostas de fallback
 const createFallbackResponse = (data) => ({
@@ -11,18 +11,48 @@ const createFallbackResponse = (data) => ({
 // Função auxiliar para simular delay de API
 const simulateApiDelay = () => new Promise(resolve => setTimeout(resolve, 100));
 
-// --- ADMIN API COMPLETAMENTE LOCAL ---
+// Função para fazer requisições com fallback
+const apiRequest = async (endpoint, options = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return { success: true, data };
+    } else {
+      throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (error) {
+    console.warn(`API request failed for ${endpoint}:`, error);
+    return null; // Indica que deve usar fallback local
+  }
+};
+
+// --- ADMIN API HÍBRIDA ---
 export const adminAPI = {
   checkAuth: async () => {
+    // Tenta backend primeiro
+    const backendResponse = await apiRequest('/api/admin/check-auth');
+    if (backendResponse) {
+      return backendResponse;
+    }
+
+    // Fallback local
     await simulateApiDelay();
     try {
       const authData = localStorage.getItem('dr_rodrigo_admin_auth');
       if (authData) {
         const parsed = JSON.parse(authData);
         if (parsed && parsed.authenticated === true && parsed.expiresAt > Date.now()) {
-        return {
+          return {
             success: true,
-          data: {
+            data: {
               authenticated: true,
               admin: parsed.user,
               user: parsed.user
@@ -52,6 +82,25 @@ export const adminAPI = {
   },
 
   login: async (credentials) => {
+    // Tenta backend primeiro
+    const backendResponse = await apiRequest('/api/admin/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    
+    if (backendResponse && backendResponse.data.success) {
+      // Salva no localStorage também
+      const authData = {
+        authenticated: true,
+        user: backendResponse.data.user,
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000),
+        token: backendResponse.data.token
+      };
+      localStorage.setItem('dr_rodrigo_admin_auth', JSON.stringify(authData));
+      return backendResponse;
+    }
+
+    // Fallback local
     await simulateApiDelay();
     try {
       // Credenciais padrão
@@ -114,9 +163,24 @@ export const adminAPI = {
   }
 };
 
-// --- SITE CONTENT API COMPLETAMENTE LOCAL ---
+// --- SITE CONTENT API HÍBRIDA ---
 export const siteContentAPI = {
   getAllContent: async () => {
+    // Tenta backend primeiro
+    const backendResponse = await apiRequest('/api/content');
+    if (backendResponse && backendResponse.data) {
+      // Converte formato do backend para formato esperado pelo frontend
+      const contentObj = {};
+      backendResponse.data.forEach(item => {
+        contentObj[item.section_id] = item.content_data;
+      });
+      
+      // Salva no localStorage como backup
+      localStorage.setItem('dr_rodrigo_site_content', JSON.stringify(contentObj));
+      return createFallbackResponse(contentObj);
+    }
+
+    // Fallback local
     await simulateApiDelay();
     try {
       const savedContent = localStorage.getItem('dr_rodrigo_site_content');
@@ -126,85 +190,85 @@ export const siteContentAPI = {
       } else {
         // Conteúdo padrão se não houver dados salvos
         const defaultContent = {
-        hero: {
-          title: "Dr. Rodrigo Sguario",
-          subtitle: "Cardiologista Especialista em Transplante Cardíaco",
-          description: "Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.",
-          cta_text: "Agendar Consulta",
-          cta_link: "#contact",
-          achievements: [
-            {
-              icon: "Heart",
-              title: "Referência em Transplante",
-              description: "Liderança e experiência em transplantes cardíacos"
-            },
-            {
-              icon: "Award", 
-              title: "Tecnologia Avançada",
-              description: "Equipamentos de última geração para diagnósticos precisos"
-            },
-            {
-              icon: "Users",
-              title: "Atendimento Humanizado", 
-              description: "Cuidado focado no paciente, com empatia e atenção"
-            }
-          ],
-          stats: [
-            { number: "500+", label: "Pacientes Atendidos" },
-            { number: "15+", label: "Anos de Experiência" },
-            { number: "5.0", label: "Avaliação Média" },
-            { number: "24h", label: "Suporte Emergencial" }
-          ]
-        },
-        about: {
-          title: "Sobre o Dr. Rodrigo",
-          description: "Médico cardiologista com ampla experiência em transplante cardíaco e cuidado humanizado.",
-          education: [
-            {
-              institution: "Instituto do Coração (InCor) - USP-SP",
-              degree: "Especialização em Insuficiência Cardíaca e Transplante",
-              period: "2023-2024",
-              description: "Centro de referência em cardiologia da América Latina"
-            },
-            {
-              institution: "UNICAMP",
-              degree: "Residência em Cardiologia",
-              period: "2021-2023",
-              description: "Formação especializada em cardiologia clínica e intervencionista"
-            },
-            {
-              institution: "Universidade Federal de Pelotas (UFPel)",
-              degree: "Graduação em Medicina",
-              period: "2015-2020",
-              description: "Formação médica com foco humanizado"
-            }
-          ],
-          specialties: [
-            "Transplante Cardíaco",
-            "Insuficiência Cardíaca Avançada",
-            "Cardiologia Preventiva",
-            "Ecocardiografia",
-            "Cateterismo Cardíaco",
-            "Reabilitação Cardíaca"
-          ],
-          values: [
-            {
-              icon: "Heart",
-              title: "Formação de Excelência",
-              description: "InCor-USP, UNICAMP e UFPel. Formação acadêmica completa."
-            },
-            {
-              icon: "Users",
-              title: "Foco no Paciente",
-              description: "Cuidado centrado nas necessidades individuais de cada paciente."
-            },
-            {
-              icon: "BookOpen",
-              title: "Atualização Constante",
-              description: "Sempre em busca das mais recentes inovações em cardiologia."
-            }
-          ]
-        },
+          hero: {
+            title: "Dr. Rodrigo Sguario",
+            subtitle: "Cardiologista Especialista em Transplante Cardíaco",
+            description: "Especialista em cardiologia com foco em transplante cardíaco e insuficiência cardíaca avançada.",
+            cta_text: "Agendar Consulta",
+            cta_link: "#contact",
+            achievements: [
+              {
+                icon: "Heart",
+                title: "Referência em Transplante",
+                description: "Liderança e experiência em transplantes cardíacos"
+              },
+              {
+                icon: "Award", 
+                title: "Tecnologia Avançada",
+                description: "Equipamentos de última geração para diagnósticos precisos"
+              },
+              {
+                icon: "Users",
+                title: "Atendimento Humanizado", 
+                description: "Cuidado focado no paciente, com empatia e atenção"
+              }
+            ],
+            stats: [
+              { number: "500+", label: "Pacientes Atendidos" },
+              { number: "15+", label: "Anos de Experiência" },
+              { number: "5.0", label: "Avaliação Média" },
+              { number: "24h", label: "Suporte Emergencial" }
+            ]
+          },
+          about: {
+            title: "Sobre o Dr. Rodrigo",
+            description: "Médico cardiologista com ampla experiência em transplante cardíaco e cuidado humanizado.",
+            education: [
+              {
+                institution: "Instituto do Coração (InCor) - USP-SP",
+                degree: "Especialização em Insuficiência Cardíaca e Transplante",
+                period: "2023-2024",
+                description: "Centro de referência em cardiologia da América Latina"
+              },
+              {
+                institution: "UNICAMP",
+                degree: "Residência em Cardiologia",
+                period: "2021-2023",
+                description: "Formação especializada em cardiologia clínica e intervencionista"
+              },
+              {
+                institution: "Universidade Federal de Pelotas (UFPel)",
+                degree: "Graduação em Medicina",
+                period: "2015-2020",
+                description: "Formação médica com foco humanizado"
+              }
+            ],
+            specialties: [
+              "Transplante Cardíaco",
+              "Insuficiência Cardíaca Avançada",
+              "Cardiologia Preventiva",
+              "Ecocardiografia",
+              "Cateterismo Cardíaco",
+              "Reabilitação Cardíaca"
+            ],
+            values: [
+              {
+                icon: "Heart",
+                title: "Formação de Excelência",
+                description: "InCor-USP, UNICAMP e UFPel. Formação acadêmica completa."
+              },
+              {
+                icon: "Users",
+                title: "Foco no Paciente",
+                description: "Cuidado centrado nas necessidades individuais de cada paciente."
+              },
+              {
+                icon: "BookOpen",
+                title: "Atualização Constante",
+                description: "Sempre em busca das mais recentes inovações em cardiologia."
+              }
+            ]
+          },
           services: {
             title: "Nossos Serviços",
             subtitle: "Cuidado cardiológico completo e especializado",
@@ -235,8 +299,8 @@ export const siteContentAPI = {
               }
             ]
           },
-        contact: {
-          title: "Entre em Contato",
+          contact: {
+            title: "Entre em Contato",
             subtitle: "Agende sua consulta ou tire suas dúvidas",
             phone: "(11) 99999-9999",
             email: "contato@drrodrigo.com.br",
@@ -344,13 +408,35 @@ export const siteContentAPI = {
   },
 
   updateContent: async (content) => {
+    // Tenta backend primeiro
+    const promises = Object.entries(content).map(([sectionId, contentData]) => 
+      apiRequest(`/api/content/${sectionId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ content_data: contentData })
+      })
+    );
+
+    const backendResults = await Promise.all(promises);
+    const allSuccessful = backendResults.every(result => result && result.success);
+
+    if (allSuccessful) {
+      // Salva no localStorage também como backup
+      localStorage.setItem('dr_rodrigo_site_content', JSON.stringify(content));
+      return {
+        success: true,
+        data: content,
+        message: 'Conteúdo atualizado com sucesso no servidor'
+      };
+    }
+
+    // Fallback local
     await simulateApiDelay();
     try {
       localStorage.setItem('dr_rodrigo_site_content', JSON.stringify(content));
       return {
         success: true,
         data: content,
-        message: 'Conteúdo atualizado com sucesso'
+        message: 'Conteúdo atualizado localmente'
       };
     } catch (error) {
       console.error('Erro ao salvar conteúdo:', error);

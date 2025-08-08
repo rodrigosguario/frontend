@@ -44,38 +44,50 @@
 :root {
   --radius: 0.75rem;
   
-  /* Cores padrão - serão sobrescritas pelo ThemeProvider */
+  /* Nova paleta de cores - Clássica e Moderna */
   --background: oklch(0.99 0.002 220);
-  --foreground: oklch(0.12 0.02 220);
+  --foreground: oklch(0.15 0.02 220);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0.02 220);
+  --card-foreground: oklch(0.15 0.02 220);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0.02 220);
-  --primary: oklch(0.25 0.08 220);
+  --popover-foreground: oklch(0.15 0.02 220);
+  
+  /* Azul sofisticado - mais claro e elegante */
+  --primary: oklch(0.45 0.12 220);
   --primary-foreground: oklch(0.98 0.01 220);
-  --secondary: oklch(0.45 0.05 220);
+  
+  /* Cinza azulado elegante */
+  --secondary: oklch(0.55 0.08 220);
   --secondary-foreground: oklch(0.98 0.01 220);
-  --muted: oklch(0.94 0.02 220);
-  --muted-foreground: oklch(0.55 0.03 220);
-  --accent: oklch(0.55 0.12 45);
+  
+  --muted: oklch(0.96 0.01 220);
+  --muted-foreground: oklch(0.45 0.02 220);
+  
+  /* Dourado elegante como accent */
+  --accent: oklch(0.65 0.15 85);
   --accent-foreground: oklch(0.15 0.05 220);
+  
   --destructive: oklch(0.62 0.2 25);
-  --border: oklch(0.90 0.02 220);
-  --input: oklch(0.90 0.02 220);
-  --ring: oklch(0.25 0.08 220);
-  --chart-1: oklch(0.55 0.12 45);
-  --chart-2: oklch(0.45 0.05 220);
-  --chart-3: oklch(0.35 0.08 180);
-  --chart-4: oklch(0.65 0.1 300);
-  --chart-5: oklch(0.75 0.08 60);
+  --border: oklch(0.92 0.01 220);
+  --input: oklch(0.92 0.01 220);
+  --ring: oklch(0.45 0.12 220);
+  
+  /* Cores de gráfico harmonizadas */
+  --chart-1: oklch(0.45 0.12 220);
+  --chart-2: oklch(0.65 0.15 85);
+  --chart-3: oklch(0.55 0.08 180);
+  --chart-4: oklch(0.60 0.12 300);
+  --chart-5: oklch(0.70 0.10 60);
+  
+  /* Sidebar com tons mais suaves */
   --sidebar: oklch(0.98 0.01 220);
-  --sidebar-foreground: oklch(0.12 0.02 220);
-  --sidebar-primary: oklch(0.25 0.08 220);
+  --sidebar-foreground: oklch(0.15 0.02 220);
+  --sidebar-primary: oklch(0.45 0.12 220);
   --sidebar-primary-foreground: oklch(0.98 0.01 220);
-  --sidebar-accent: oklch(0.94 0.02 220);
-  --sidebar-accent-foreground: oklch(0.12 0.02 220);
-  --sidebar-border: oklch(0.90 0.02 220);
-  --sidebar-ring: oklch(0.25 0.08 220);
+  --sidebar-accent: oklch(0.96 0.01 220);
+  --sidebar-accent-foreground: oklch(0.15 0.02 220);
+  --sidebar-border: oklch(0.92 0.01 220);
+  --sidebar-ring: oklch(0.45 0.12 220);
 }
 
 /* Estilos personalizados para temas dinâmicos */
@@ -84,7 +96,7 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Gradientes dinâmicos */
+/* Gradientes elegantes e modernos */
 .gradient-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
 }
@@ -100,15 +112,45 @@ body {
     var(--accent) 100%);
 }
 
-/* Sombras dinâmicas */
+/* Gradiente suave para seções */
+.gradient-soft {
+  background: linear-gradient(135deg, 
+    oklch(0.98 0.01 220) 0%, 
+    oklch(0.96 0.02 220) 100%);
+}
+
+/* Gradiente para cards premium */
+.gradient-card {
+  background: linear-gradient(135deg, 
+    oklch(1 0 0) 0%, 
+    oklch(0.99 0.01 220) 100%);
+}
+
+/* Sombras elegantes e suaves */
 .card-shadow {
-  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--primary) 10%, transparent),
-              0 2px 4px -1px color-mix(in srgb, var(--primary) 6%, transparent);
+  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--primary) 8%, transparent),
+              0 2px 4px -1px color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
 .card-shadow-lg {
-  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--primary) 15%, transparent),
-              0 4px 6px -2px color-mix(in srgb, var(--primary) 10%, transparent);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--primary) 12%, transparent),
+              0 4px 6px -2px color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+/* Sombra premium para elementos importantes */
+.card-shadow-premium {
+  box-shadow: 0 20px 25px -5px color-mix(in srgb, var(--primary) 15%, transparent),
+              0 10px 10px -5px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Sombra suave para hover */
+.hover-shadow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 12px 20px -5px color-mix(in srgb, var(--primary) 20%, transparent),
+              0 8px 16px -8px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .hover-lift {
